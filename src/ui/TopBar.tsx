@@ -4,6 +4,7 @@ import { CircleButton } from './CircleButton';
 import { useLayout } from './layout';
 import { Text } from './Text';
 import { color, font, gutter, minTapTarget, space } from './tokens';
+import { t } from '@/i18n';
 
 export type TopBarProps = {
   /** Back chevron for drilling in, close for leaving a flow. */
@@ -29,7 +30,7 @@ export function TopBar({ leading = 'back', onLeading, leadingLabel, title, cente
         {leading && onLeading ? (
           <CircleButton
             icon={leading === 'close' ? 'close' : 'back'}
-            label={leadingLabel ?? (leading === 'close' ? 'Close' : 'Back')}
+            label={leadingLabel ?? (leading === 'close' ? t('ui.topBar.close') : t('ui.topBar.back'))}
             onPress={onLeading}
           />
         ) : null}

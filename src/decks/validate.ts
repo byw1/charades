@@ -11,6 +11,7 @@ import {
   MIN_PLAYABLE_CARDS,
 } from './types';
 import { parseHexColor } from '@/ui/contrast';
+import { t } from '@/i18n';
 
 /**
  * Deck validation.
@@ -94,7 +95,7 @@ export function validateDeck(input: unknown): ValidationResult {
     return {
       ok: false,
       reason: 'malformed',
-      errors: [{ path: '', message: 'This file does not contain a deck.' }],
+      errors: [{ path: '', message: t('decks.validation.notADeck') }],
       warnings,
     };
   }
@@ -110,7 +111,7 @@ export function validateDeck(input: unknown): ValidationResult {
       errors: [
         {
           path: 'schemaVersion',
-          message: 'This file is missing a deck version, so it cannot be read as a deck.',
+          message: t('decks.validation.missingVersion'),
         },
       ],
       warnings,
@@ -123,7 +124,10 @@ export function validateDeck(input: unknown): ValidationResult {
       errors: [
         {
           path: 'schemaVersion',
-          message: `This deck was made with a newer version of Charades (deck version ${schemaVersion}, this app reads up to ${CURRENT_DECK_SCHEMA_VERSION}). Update the app to open it.`,
+          message: t('decks.validation.newerVersion', {
+            version: schemaVersion,
+            supported: CURRENT_DECK_SCHEMA_VERSION,
+          }),
         },
       ],
       warnings,
@@ -133,49 +137,49 @@ export function validateDeck(input: unknown): ValidationResult {
     return {
       ok: false,
       reason: 'malformed',
-      errors: [{ path: 'schemaVersion', message: 'This deck has an invalid version number.' }],
+      errors: [{ path: 'schemaVersion', message: t('decks.validation.invalidVersion') }],
       warnings,
     };
   }
 
   const id = typeof input.id === 'string' ? input.id : '';
   if (!id) {
-    fail('id', 'This deck has no identifier.');
+    fail('id', t('decks.validation.noId'));
   } else if (!isDeckId(id)) {
-    fail('id', 'This deck has an identifier the app does not recognise.');
+    fail('id', t('decks.validation.badId'));
   }
 
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   if (!name) {
-    fail('name', 'A deck needs a name.');
+    fail('name', t('decks.validation.noName'));
   } else if (name.length > MAX_NAME_LENGTH) {
-    fail('name', `Deck names are limited to ${MAX_NAME_LENGTH} characters.`);
+    fail('name', t('decks.validation.nameTooLong', { max: MAX_NAME_LENGTH }));
   }
 
   const description = typeof input.description === 'string' ? input.description : '';
   if (input.description !== undefined && typeof input.description !== 'string') {
-    fail('description', 'The deck description is not text.');
+    fail('description', t('decks.validation.descriptionNotText'));
   } else if (description.length > MAX_DESCRIPTION_LENGTH) {
-    fail('description', `Deck descriptions are limited to ${MAX_DESCRIPTION_LENGTH} characters.`);
+    fail('description', t('decks.validation.descriptionTooLong', { max: MAX_DESCRIPTION_LENGTH }));
   }
 
   const author = typeof input.author === 'string' ? input.author : '';
   if (input.author !== undefined && typeof input.author !== 'string') {
-    fail('author', 'The deck author is not text.');
+    fail('author', t('decks.validation.authorNotText'));
   } else if (author.length > MAX_AUTHOR_LENGTH) {
-    fail('author', `Author names are limited to ${MAX_AUTHOR_LENGTH} characters.`);
+    fail('author', t('decks.validation.authorTooLong', { max: MAX_AUTHOR_LENGTH }));
   }
 
   const language = typeof input.language === 'string' && input.language ? input.language : 'en';
   if (input.language !== undefined && typeof input.language !== 'string') {
-    fail('language', 'The deck language is not text.');
+    fail('language', t('decks.validation.languageNotText'));
   }
 
   const accentColor = typeof input.accentColor === 'string' ? input.accentColor : '';
   if (!accentColor) {
-    fail('accentColor', 'This deck has no colour.');
+    fail('accentColor', t('decks.validation.noColour'));
   } else if (!parseHexColor(accentColor)) {
-    fail('accentColor', `"${accentColor}" is not a colour the app can read. Use a hex value like #FF3D6E.`);
+    fail('accentColor', t('decks.validation.badColour', { value: accentColor }));
   }
 
   // Cosmetic, so a bad one is dropped with a warning rather than failing the deck.
@@ -185,77 +189,77 @@ export function validateDeck(input: unknown): ValidationResult {
     if (raw && raw.length <= MAX_DECK_EMOJI_LENGTH && /\p{Extended_Pictographic}/u.test(raw)) {
       emoji = raw;
     } else {
-      warn('emoji', 'This deck’s cover emoji could not be read, so it will use the default.');
+      warn('emoji', t('decks.validation.badEmoji'));
     }
   }
 
   let tags: string[] = [];
   if (input.tags !== undefined) {
     if (!Array.isArray(input.tags) || input.tags.some((t) => typeof t !== 'string')) {
-      fail('tags', 'Deck tags are not a list of text.');
+      fail('tags', t('decks.validation.tagsNotList'));
     } else {
       tags = (input.tags as string[]).map((t) => t.trim()).filter(Boolean);
       if (tags.length > MAX_TAGS) {
-        fail('tags', `Decks are limited to ${MAX_TAGS} tags.`);
+        fail('tags', t('decks.validation.tooManyTags', { max: MAX_TAGS }));
       }
       if (tags.some((t) => t.length > MAX_TAG_LENGTH)) {
-        fail('tags', `Tags are limited to ${MAX_TAG_LENGTH} characters.`);
+        fail('tags', t('decks.validation.tagTooLong', { max: MAX_TAG_LENGTH }));
       }
     }
   }
 
   for (const field of ['createdAt', 'updatedAt'] as const) {
     if (!isIsoDate(input[field])) {
-      fail(field, 'This deck has an unreadable date.');
+      fail(field, t('decks.validation.badDate'));
     }
   }
 
   const cards: Card[] = [];
   if (!Array.isArray(input.cards)) {
-    fail('cards', 'This deck has no cards list.');
+    fail('cards', t('decks.validation.noCards'));
   } else if (input.cards.length > MAX_CARDS) {
-    fail('cards', `Decks are limited to ${MAX_CARDS} cards. This one has ${input.cards.length}.`);
+    fail('cards', t('decks.validation.tooManyCards', { max: MAX_CARDS, count: input.cards.length }));
   } else {
     const seenCardIds = new Set<string>();
 
     input.cards.forEach((raw, index) => {
       const path = `cards[${index}]`;
       if (!isRecord(raw)) {
-        fail(path, `Card ${index + 1} is not a card.`);
+        fail(path, t('decks.validation.cardNotACard', { index: index + 1 }));
         return;
       }
 
       const cardId = typeof raw.id === 'string' ? raw.id : '';
       if (!cardId) {
-        fail(`${path}.id`, `Card ${index + 1} has no identifier.`);
+        fail(`${path}.id`, t('decks.validation.cardNoId', { index: index + 1 }));
       } else if (!isCardId(cardId)) {
-        fail(`${path}.id`, `Card ${index + 1} has an identifier the app does not recognise.`);
+        fail(`${path}.id`, t('decks.validation.cardBadId', { index: index + 1 }));
       } else if (seenCardIds.has(cardId)) {
         // Duplicate ids would make seen-card tracking mark two cards at once.
-        fail(`${path}.id`, `Two cards share the same identifier (${cardId}).`);
+        fail(`${path}.id`, t('decks.validation.duplicateCardId', { id: cardId }));
       } else {
         seenCardIds.add(cardId);
       }
 
       const text = typeof raw.text === 'string' ? raw.text.trim() : '';
       if (typeof raw.text !== 'string') {
-        fail(`${path}.text`, `Card ${index + 1} has no text.`);
+        fail(`${path}.text`, t('decks.validation.cardNoText', { index: index + 1 }));
       } else if (!text) {
-        fail(`${path}.text`, `Card ${index + 1} is empty.`);
+        fail(`${path}.text`, t('decks.validation.cardEmpty', { index: index + 1 }));
       } else if (text.length > CARD_TEXT_SOFT_CAP) {
         // Soft cap: allowed, but it will be small on the card.
         warn(
           `${path}.text`,
-          `"${text.slice(0, 30)}…" is ${text.length} characters. Anything over ${CARD_TEXT_SOFT_CAP} is hard to read at arm's length.`,
+          t('decks.validation.cardTooLong', { start: text.slice(0, 30), length: text.length, max: CARD_TEXT_SOFT_CAP }),
         );
       }
 
       let note: string | null = null;
       if (raw.note !== undefined && raw.note !== null) {
         if (typeof raw.note !== 'string') {
-          fail(`${path}.note`, `The hint on card ${index + 1} is not text.`);
+          fail(`${path}.note`, t('decks.validation.hintNotText', { index: index + 1 }));
         } else if (raw.note.length > MAX_NOTE_LENGTH) {
-          fail(`${path}.note`, `Hints are limited to ${MAX_NOTE_LENGTH} characters.`);
+          fail(`${path}.note`, t('decks.validation.hintTooLong', { max: MAX_NOTE_LENGTH }));
         } else {
           note = raw.note.trim() || null;
         }
@@ -264,13 +268,13 @@ export function validateDeck(input: unknown): ValidationResult {
       let taboo: string[] = [];
       if (raw.taboo !== undefined && raw.taboo !== null) {
         if (!Array.isArray(raw.taboo) || raw.taboo.some((t) => typeof t !== 'string')) {
-          fail(`${path}.taboo`, `The banned words on card ${index + 1} are not a list of text.`);
+          fail(`${path}.taboo`, t('decks.validation.tabooNotList', { index: index + 1 }));
         } else {
           taboo = normaliseTaboo(raw.taboo as string[]);
           if (taboo.length > MAX_TABOO_WORDS) {
-            fail(`${path}.taboo`, `Cards are limited to ${MAX_TABOO_WORDS} banned words.`);
+            fail(`${path}.taboo`, t('decks.validation.tooManyTaboo', { max: MAX_TABOO_WORDS }));
           } else if (taboo.some((t) => t.length > MAX_TABOO_WORD_LENGTH)) {
-            fail(`${path}.taboo`, `Banned words are limited to ${MAX_TABOO_WORD_LENGTH} characters.`);
+            fail(`${path}.taboo`, t('decks.validation.tabooTooLong', { max: MAX_TABOO_WORD_LENGTH }));
           }
         }
       }
@@ -278,9 +282,9 @@ export function validateDeck(input: unknown): ValidationResult {
       let image: string | null = null;
       if (raw.image !== undefined && raw.image !== null) {
         if (typeof raw.image !== 'string' || !IMAGE_DATA_URI.test(raw.image)) {
-          fail(`${path}.image`, `The photo on card ${index + 1} is not a picture the app can show.`);
+          fail(`${path}.image`, t('decks.validation.badPhoto', { index: index + 1 }));
         } else if (raw.image.length > MAX_IMAGE_DATA_LENGTH) {
-          fail(`${path}.image`, `The photo on card ${index + 1} is too large.`);
+          fail(`${path}.image`, t('decks.validation.photoTooLarge', { index: index + 1 }));
         } else {
           image = raw.image;
         }
@@ -302,10 +306,7 @@ export function validateDeck(input: unknown): ValidationResult {
   // Not an error. The spec allows a short deck to exist, it just cannot start
   // a round, and the deck browser says so.
   if (cards.length < MIN_PLAYABLE_CARDS) {
-    warn(
-      'cards',
-      `This deck has ${cards.length} ${cards.length === 1 ? 'card' : 'cards'}. It needs ${MIN_PLAYABLE_CARDS} to start a round.`,
-    );
+    warn('cards', t('decks.validation.tooFewCards', { count: cards.length, min: MIN_PLAYABLE_CARDS }));
   }
 
   const deck: Deck = {

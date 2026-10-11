@@ -5,6 +5,7 @@ import { Alert, StyleSheet, Text as RNText, useWindowDimensions, View } from 're
 import { captureRef } from 'react-native-view-shot';
 import { wrapNight, type Wrapped } from '@/game/wrapped';
 import { useDatabase } from '@/hooks/useDatabase';
+import { t } from '@/i18n';
 import { getDeck } from '@/storage/deckRepo';
 import { listSessions } from '@/storage/sessionRepo';
 import { Button } from '@/ui/Button';
@@ -61,12 +62,12 @@ export default function WrappedScreen() {
     try {
       const uri = await captureRef(story, { format: 'png', quality: 1, result: 'tmpfile' });
       if (!(await Sharing.isAvailableAsync())) {
-        Alert.alert('Sharing isn’t available', 'Take a screenshot instead: Side button + Volume Up.');
+        Alert.alert(t('wrapped.unavailableTitle'), t('wrapped.screenshotHint'));
         return;
       }
-      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share your night' });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: t('wrapped.shareDialogTitle') });
     } catch {
-      Alert.alert('Couldn’t make the image', 'Take a screenshot instead: Side button + Volume Up.');
+      Alert.alert(t('wrapped.failedTitle'), t('wrapped.screenshotHint'));
     } finally {
       setSharing(false);
     }
@@ -78,14 +79,14 @@ export default function WrappedScreen() {
 
   return (
     <Screen>
-      <TopBar leading="close" onLeading={router.back} leadingLabel="Close" title="Wrapped" />
+      <TopBar leading="close" onLeading={router.back} leadingLabel={t('common.close')} title={t('wrapped.title')} />
 
       {loaded === null ? (
         <View style={styles.center}>
           <Mascot size={100} mood="thinking" />
         </View>
       ) : loaded === 'empty' ? (
-        <EmptyState title="Nothing to wrap yet" body="Play a round and your night shows up here." />
+        <EmptyState title={t('wrapped.emptyTitle')} body={t('wrapped.emptyBody')} />
       ) : (
         <View style={styles.center}>
           <View ref={story} collapsable={false} style={[styles.story, { width: cardW, height: cardW * (16 / 9) }]}>
@@ -96,7 +97,7 @@ export default function WrappedScreen() {
 
       <Footer>
         <Button
-          label={sharing ? 'Making it…' : 'Share'}
+          label={sharing ? t('wrapped.making') : t('common.share')}
           variant="primary"
           size="lg"
           icon="share"
@@ -110,39 +111,58 @@ export default function WrappedScreen() {
 
 function Story({ wrapped, cardText, deckNames, k }: Loaded & { k: number }) {
   const when = wrapped.isToday
-    ? 'TONIGHT'
+    ? t('wrapped.story.tonight')
     : new Date(`${wrapped.day}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
 
-  const text = (cardId: string) => cardText.get(cardId) ?? 'a card';
+  const text = (cardId: string) => cardText.get(cardId) ?? t('wrapped.story.aCard');
   const rows: { emoji: string; label: string; value: string; tint: string }[] = [];
 
-  if (wrapped.mvp) rows.push({ emoji: '👑', label: 'MVP', value: `${wrapped.mvp.name} · ${wrapped.mvp.cards} cards`, tint: palette.yellow });
+  if (wrapped.mvp) rows.push({
+      emoji: '👑',
+      label: t('wrapped.story.mvp'),
+      value: t('wrapped.story.mvpValue', { name: wrapped.mvp.name, count: wrapped.mvp.cards }),
+      tint: palette.yellow,
+    });
   if (wrapped.bestRound) {
     rows.push({
       emoji: '🔥',
-      label: 'Best round',
-      value: `${wrapped.bestRound.name ? `${wrapped.bestRound.name} · ` : ''}${wrapped.bestRound.cards} in ${wrapped.bestRound.seconds}s`,
+      label: t('wrapped.story.bestRound'),
+      value: wrapped.bestRound.name
+        ? t('wrapped.story.bestRoundValueNamed', {
+            name: wrapped.bestRound.name,
+            cards: wrapped.bestRound.cards,
+            seconds: wrapped.bestRound.seconds,
+          })
+        : t('wrapped.story.bestRoundValue', { cards: wrapped.bestRound.cards, seconds: wrapped.bestRound.seconds }),
       tint: palette.pink,
     });
   }
   if (wrapped.fastest) {
     rows.push({
       emoji: '⚡',
-      label: 'Fastest guess',
-      value: `“${text(wrapped.fastest.cardId)}” in ${wrapped.fastest.seconds.toFixed(1)}s`,
+      label: t('wrapped.story.fastest'),
+      value: t('wrapped.story.fastestValue', { card: text(wrapped.fastest.cardId), seconds: wrapped.fastest.seconds.toFixed(1) }),
       tint: palette.blue,
     });
   }
   if (wrapped.mostPassed) {
     rows.push({
       emoji: '😵',
-      label: 'Nobody could get',
-      value: `“${text(wrapped.mostPassed.cardId)}”${wrapped.mostPassed.times > 1 ? ` · passed ${wrapped.mostPassed.times}×` : ''}`,
+      label: t('wrapped.story.mostPassed'),
+      value:
+        wrapped.mostPassed.times > 1
+          ? t('wrapped.story.mostPassedValueTimes', { card: text(wrapped.mostPassed.cardId), times: wrapped.mostPassed.times })
+          : t('wrapped.story.mostPassedValue', { card: text(wrapped.mostPassed.cardId) }),
       tint: palette.purple,
     });
   }
   if (wrapped.busted > 0) {
-    rows.push({ emoji: '🚨', label: 'Busted', value: `${wrapped.busted} forbidden ${wrapped.busted === 1 ? 'word' : 'words'} said`, tint: palette.red });
+    rows.push({
+      emoji: '🚨',
+      label: t('wrapped.story.busted'),
+      value: t('wrapped.story.bustedValue', { count: wrapped.busted }),
+      tint: palette.red,
+    });
   }
 
   return (
@@ -154,13 +174,13 @@ function Story({ wrapped, cardText, deckNames, k }: Loaded & { k: number }) {
         <View style={styles.storyHeader}>
           <View style={{ gap: 2 * k, flex: 1 }}>
             <RNText style={[styles.overline, { fontSize: 13 * k, lineHeight: 16 * k }]} allowFontScaling={false}>
-              {when}, WRAPPED
+              {t('wrapped.story.overline', { when })}
             </RNText>
             <RNText style={[styles.big, { fontSize: 64 * k, lineHeight: 64 * k }]} allowFontScaling={false}>
               {wrapped.cardsGuessed}
             </RNText>
             <RNText style={[styles.bigLabel, { fontSize: 18 * k, lineHeight: 22 * k }]} allowFontScaling={false}>
-              cards guessed
+              {t('wrapped.story.cardsGuessed', { count: wrapped.cardsGuessed })}
             </RNText>
           </View>
           <View style={{ transform: [{ rotate: '8deg' }] }}>
@@ -169,8 +189,16 @@ function Story({ wrapped, cardText, deckNames, k }: Loaded & { k: number }) {
         </View>
 
         <RNText style={[styles.sub, { fontSize: 14 * k, lineHeight: 19 * k }]} allowFontScaling={false}>
-          {wrapped.games} {wrapped.games === 1 ? 'game' : 'games'} · {wrapped.rounds} {wrapped.rounds === 1 ? 'round' : 'rounds'}
-          {wrapped.streak > 1 ? ` · 🔥 ${wrapped.streak}-day streak` : ''}
+          {wrapped.streak > 1
+            ? t('wrapped.story.summaryWithStreak', {
+                games: t('wrapped.story.games', { count: wrapped.games }),
+                rounds: t('wrapped.story.rounds', { count: wrapped.rounds }),
+                streak: t('wrapped.story.streak', { count: wrapped.streak }),
+              })
+            : t('wrapped.story.summary', {
+                games: t('wrapped.story.games', { count: wrapped.games }),
+                rounds: t('wrapped.story.rounds', { count: wrapped.rounds }),
+              })}
         </RNText>
 
         <View style={{ gap: 9 * k }}>
@@ -197,11 +225,11 @@ function Story({ wrapped, cardText, deckNames, k }: Loaded & { k: number }) {
 
         {deckNames.length > 0 ? (
           <RNText style={[styles.sub, { fontSize: 12 * k, lineHeight: 16 * k }]} allowFontScaling={false} numberOfLines={2}>
-            Decks: {deckNames.join(' · ')}
+            {t('wrapped.story.decks', { names: deckNames.join(' · ') })}
           </RNText>
         ) : null}
         <RNText style={[styles.footer, { fontSize: 13 * k, lineHeight: 16 * k }]} allowFontScaling={false}>
-          CHARADES · make your own decks
+          {t('wrapped.story.footer')}
         </RNText>
       </View>
     </View>

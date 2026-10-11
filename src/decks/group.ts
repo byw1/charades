@@ -1,5 +1,6 @@
 import { makeCardId, makeDeckId, type RandomSource } from './ids';
 import { CARD_TEXT_SOFT_CAP, CURRENT_DECK_SCHEMA_VERSION, type Card, type Deck } from './types';
+import { getLocale, t } from '@/i18n';
 
 /**
  * "A deck about your group."
@@ -19,42 +20,34 @@ export type GroupPrompt = {
   example: string;
 };
 
+type PromptId = 'people' | 'places' | 'jokes' | 'sayings' | 'obsessions';
+
+/**
+ * The words are looked up each time they are read, so they follow the
+ * phone's language even though this list is built when the module loads.
+ */
+function prompt(id: PromptId, emoji: string): GroupPrompt {
+  return {
+    id,
+    emoji,
+    get title() {
+      return t(`decks.group.prompts.${id}.title`);
+    },
+    get hint() {
+      return t(`decks.group.prompts.${id}.hint`);
+    },
+    get example() {
+      return t(`decks.group.prompts.${id}.example`);
+    },
+  };
+}
+
 export const GROUP_PROMPTS: readonly GroupPrompt[] = [
-  {
-    id: 'people',
-    emoji: '👯',
-    title: 'Who’s in the group?',
-    hint: 'Friends, roommates, the one who always shows up late. One per line.',
-    example: 'Sam\nAlex\nJo’s mum',
-  },
-  {
-    id: 'places',
-    emoji: '📍',
-    title: 'Where do you all end up?',
-    hint: 'The diner, someone’s couch, that one parking lot.',
-    example: 'Taco Tuesday spot\nThe library basement\nAlex’s car',
-  },
-  {
-    id: 'jokes',
-    emoji: '😂',
-    title: 'Inside jokes',
-    hint: 'The stuff nobody outside the group would get.',
-    example: 'The great pizza incident\nCanoe trip\nThe group chat name',
-  },
-  {
-    id: 'sayings',
-    emoji: '💬',
-    title: 'Things someone always says',
-    hint: 'Catchphrases. Add who says it after a | if you like.',
-    example: 'Five more minutes | Jo\nIt’s giving | Sam',
-  },
-  {
-    id: 'obsessions',
-    emoji: '📺',
-    title: 'What you’re all obsessed with',
-    hint: 'Shows, songs, games, snacks, that one TikTok.',
-    example: 'Love Island\nMario Kart\nSpicy ramen',
-  },
+  prompt('people', '👯'),
+  prompt('places', '📍'),
+  prompt('jokes', '😂'),
+  prompt('sayings', '💬'),
+  prompt('obsessions', '📺'),
 ];
 
 export type GroupPhoto = { image: string; name: string };
@@ -68,7 +61,10 @@ export type GroupAnswers = {
   random?: RandomSource;
 };
 
-export const DEFAULT_GROUP_DECK_NAME = 'The Group Chat';
+/** The name a group deck gets when nobody names it, in the phone's language. */
+export function defaultGroupDeckName(): string {
+  return t('decks.group.defaultName');
+}
 
 /** Every line of every answer, de-duplicated, as cards. Photos come first. */
 export function groupCards(input: Pick<GroupAnswers, 'answers' | 'photos' | 'random'>): Card[] {
@@ -94,7 +90,7 @@ export function groupCards(input: Pick<GroupAnswers, 'answers' | 'photos' | 'ran
       const text = pipe === -1 ? line : line.slice(0, pipe);
       const note = pipe === -1 ? null : line.slice(pipe + 1).trim() || null;
       // A catchphrase card shows the phrase; who says it is the clue-giver's hint.
-      add(text, prompt.id === 'sayings' && note ? `Says it: ${note}` : note);
+      add(text, prompt.id === 'sayings' && note ? t('decks.group.saysIt', { name: note }) : note);
     }
   }
 
@@ -105,10 +101,10 @@ export function buildGroupDeck(input: GroupAnswers): Deck {
   return {
     schemaVersion: CURRENT_DECK_SCHEMA_VERSION,
     id: makeDeckId(input.random),
-    name: input.name?.trim() || DEFAULT_GROUP_DECK_NAME,
-    description: 'Made by the group, about the group. Only the people in the room can play this one.',
+    name: input.name?.trim() || defaultGroupDeckName(),
+    description: t('decks.group.deckDescription'),
     author: '',
-    language: 'en',
+    language: getLocale(),
     accentColor: input.accentColor,
     emoji: '👯',
     tags: ['group', 'custom'],

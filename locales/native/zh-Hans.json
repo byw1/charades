@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charades 使用相机扫描卡组二维码，并为你的自制卡片拍照。除非你主动分享，任何内容都不会离开你的手机。",
+    "NSMotionUsageDescription": "Charades 使用运动传感器实现倾斜操作：猜对就把手机向下倾，跳过就向上倾。不会记录任何数据。",
+    "NSPhotoLibraryUsageDescription": "Charades 让你为自制卡片选择照片。照片只保存在你手机里的卡组中。"
+  }
+}

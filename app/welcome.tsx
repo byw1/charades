@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text as RNText, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { t, type MessageKey } from '@/i18n';
 import { useLayout } from '@/ui/layout';
 import { type InputMode, useSettingsStore } from '@/hooks/useSettings';
 import { Button } from '@/ui/Button';
@@ -13,32 +14,33 @@ import { Caption, Sticker } from '@/ui/Social';
 import { Text } from '@/ui/Text';
 import { color, font, gutter, palette, space } from '@/ui/tokens';
 
+/** Copy is held as message keys and translated on render. */
 type Story = {
   background: string;
-  caption: string;
-  detail: string;
+  caption: MessageKey;
+  detail: MessageKey;
   mood: MascotMood;
   /** What Dex's forehead card shows. A question mark unless something better fits. */
   glyph?: string;
-  stickers?: { text: string; tint: string; tilt: number; top: string; left?: string; right?: string }[];
+  stickers?: { text: MessageKey; tint: string; tilt: number; top: string; left?: string; right?: string }[];
 };
 
 const STORIES: Story[] = [
   {
     background: palette.purple,
-    caption: 'Put the phone on your forehead',
-    detail: 'A word pops up. Everyone can see it except you.',
+    caption: 'welcome.stories.forehead.caption',
+    detail: 'welcome.stories.forehead.detail',
     mood: 'happy',
   },
   {
     background: palette.pink,
-    caption: 'Your friends yell clues',
-    detail: 'Act it out, hum it, describe it. Just don’t say it.',
+    caption: 'welcome.stories.clues.caption',
+    detail: 'welcome.stories.clues.detail',
     mood: 'wow',
     stickers: [
-      { text: 'it barks!!', tint: palette.yellow, tilt: -10, top: '22%', left: '6%' },
-      { text: 'FETCH', tint: palette.blue, tilt: 8, top: '30%', right: '6%' },
-      { text: 'good boy 🐶', tint: '#FFFFFF', tilt: -4, top: '62%', left: '10%' },
+      { text: 'welcome.stories.clues.stickerBarks', tint: palette.yellow, tilt: -10, top: '22%', left: '6%' },
+      { text: 'welcome.stories.clues.stickerFetch', tint: palette.blue, tilt: 8, top: '30%', right: '6%' },
+      { text: 'welcome.stories.clues.stickerGoodBoy', tint: '#FFFFFF', tilt: -4, top: '62%', left: '10%' },
     ],
   },
 ];
@@ -50,22 +52,22 @@ const STORY_COUNT = STORIES.length + 1;
 const CONTROLS: Record<InputMode, Story> = {
   tilt: {
     background: palette.blue,
-    caption: 'Tip it down if you got it',
-    detail: 'Tip it up to pass. Most cards before time’s up wins.',
+    caption: 'welcome.controls.tilt.caption',
+    detail: 'welcome.controls.tilt.detail',
     mood: 'excited',
     glyph: '👇',
   },
   swipe: {
     background: palette.blue,
-    caption: 'Swipe up if you got it',
-    detail: 'Swipe down to pass, anywhere on the screen. Most cards before time’s up wins.',
+    caption: 'welcome.controls.swipe.caption',
+    detail: 'welcome.controls.swipe.detail',
     mood: 'excited',
     glyph: '☝️',
   },
   tap: {
     background: palette.blue,
-    caption: 'Tap top if you got it',
-    detail: 'Tap the bottom to pass. Most cards before time’s up wins.',
+    caption: 'welcome.controls.tap.caption',
+    detail: 'welcome.controls.tap.detail',
     mood: 'excited',
     glyph: '👆',
   },
@@ -128,13 +130,13 @@ export default function WelcomeScreen() {
             style={styles.back}
             onPress={() => setIndex(Math.max(0, index - 1))}
             accessibilityRole="button"
-            accessibilityLabel="Previous"
+            accessibilityLabel={t('welcome.previous')}
           />
           <Pressable
             style={styles.next}
             onPress={() => (last ? undefined : setIndex(index + 1))}
             accessibilityRole="button"
-            accessibilityLabel="Next"
+            accessibilityLabel={t('common.next')}
           />
         </View>
       </View>
@@ -145,10 +147,10 @@ export default function WelcomeScreen() {
           <View style={styles.topRow} pointerEvents="box-none">
             <View style={styles.from}>
               <Mascot size={32} animated={false} />
-              <Text style={styles.fromName}>Dex</Text>
-              <Text style={styles.fromTime}>how to play</Text>
+              <Text style={styles.fromName}>{t('welcome.mascotName')}</Text>
+              <Text style={styles.fromTime}>{t('welcome.subtitle')}</Text>
             </View>
-            <CircleButton icon="close" label="Skip" tone="scrim" size={36} onPress={finish} />
+            <CircleButton icon="close" label={t('welcome.skip')} tone="scrim" size={36} onPress={finish} />
           </View>
         </View>
 
@@ -166,21 +168,21 @@ export default function WelcomeScreen() {
                   right: sticker.right as `${number}%` | undefined,
                 }}
               >
-                {sticker.text}
+                {t(sticker.text)}
               </Sticker>
             ))}
             <Mascot size={short ? 170 : 230} mood={story.mood} glyph={story.glyph} />
           </View>
 
           <View style={[styles.bottom, short && styles.bottomSideways]} pointerEvents="box-none">
-            <Caption size="lg">{story.caption}</Caption>
-            <RNText style={styles.detail}>{story.detail}</RNText>
+            <Caption size="lg">{t(story.caption)}</Caption>
+            <RNText style={styles.detail}>{t(story.detail)}</RNText>
             {last ? (
               <View style={styles.cta}>
-                <Button label="Let’s play" variant="white" size="lg" onPress={finish} />
+                <Button label={t('welcome.letsPlay')} variant="white" size="lg" onPress={finish} />
               </View>
             ) : (
-              <Text style={styles.tapHint}>Tap to continue</Text>
+              <Text style={styles.tapHint}>{t('welcome.tapToContinue')}</Text>
             )}
           </View>
         </View>

@@ -12,6 +12,8 @@ import { useRoundScreenMode } from '@/hooks/useRoundScreenMode';
 import { useSessionStore } from '@/hooks/useSessionStore';
 import { useSettings } from '@/hooks/useSettings';
 import { useSounds } from '@/hooks/useSounds';
+import { t } from '@/i18n';
+import { phaseRule, phaseTitle, teamName, twistRule, twistTitle } from '@/i18n/gameText';
 import { cardTextOn } from '@/ui/contrast';
 import { fitCardText, type Fit } from '@/ui/fitText';
 import { useLayout } from '@/ui/layout';
@@ -90,8 +92,8 @@ export default function RoundIntroScreen() {
   const teams = session?.teams.length ?? 0;
   const background = teams > 1 && turn ? turn.team.color : palette.purple;
   const ink = cardTextOn(background);
-  const teamLabel = teams > 1 ? turn?.team.name : null;
-  const who = turn?.playerName ? `${turn.playerName}, you’re up` : 'Phone on your forehead';
+  const teamLabel = teams > 1 && turn && session ? teamName(turn.team, session.teams) : null;
+  const who = turn?.playerName ? t('round.intro.youreUp', { name: turn.playerName }) : t('round.intro.phoneOnForehead');
 
   if (notice && !ready) {
     return (
@@ -102,7 +104,7 @@ export default function RoundIntroScreen() {
           setReady(true);
         }}
         accessibilityRole="button"
-        accessibilityLabel={`${notice.overline}. ${notice.title}. ${notice.rule}. Tap when ready.`}
+        accessibilityLabel={t('round.intro.noticeA11y', { overline: notice.overline, title: notice.title, rule: notice.rule })}
       >
         <SafeAreaView style={[styles.safe, upright && styles.safeUpright]}>
           <PopIn style={styles.noticeSticker}>
@@ -120,7 +122,7 @@ export default function RoundIntroScreen() {
               {notice.title}
             </Headline>
             <Text style={[styles.rule, { color: color.bone }, upright && styles.centred]}>{notice.rule}</Text>
-            <Text style={[styles.hint, { color: notice.tint }, upright && styles.centred]}>Tap when you’re ready</Text>
+            <Text style={[styles.hint, { color: notice.tint }, upright && styles.centred]}>{t('round.intro.tapWhenReady')}</Text>
           </View>
         </SafeAreaView>
       </Pressable>
@@ -134,7 +136,7 @@ export default function RoundIntroScreen() {
       // before the app is, and waiting out three seconds every round grates.
       onPress={() => router.replace('/round/play')}
       accessibilityRole="button"
-      accessibilityLabel={`${who}. Starting in ${count}. Tap to start now.`}
+      accessibilityLabel={t('round.intro.countdownA11y', { who, count })}
     >
       <View style={[styles.blob, { backgroundColor: ink === color.bone ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]} />
       <SafeAreaView style={[styles.safe, upright && styles.safeUpright]}>
@@ -155,10 +157,10 @@ export default function RoundIntroScreen() {
           </Headline>
           <Text style={[styles.hint, { color: ink }, upright && styles.centred]}>
             {settings.inputMode === 'tilt'
-              ? 'Tip down if you got it, up to pass'
+              ? t('round.intro.hintTilt')
               : settings.inputMode === 'swipe'
-                ? 'Swipe up if you got it, down to pass'
-                : 'Tap the top if you got it, the bottom to pass'}
+                ? t('round.intro.hintSwipe')
+                : t('round.intro.hintTap')}
           </Text>
         </View>
 
@@ -211,21 +213,21 @@ function announcement(session: Session): Notice | null {
     const firstOfPhase = !session.rounds.some((round) => round.endedAt !== null && round.phase === open.phase);
     if (!firstOfPhase) return null;
     const info = phaseInfo(open.phase);
-    return { emoji: info.emoji, overline: `PHASE ${info.phase} OF 3`, title: info.title, rule: info.rule, tint: palette.yellow };
+    return { emoji: info.emoji, overline: t('round.intro.phaseOverline', { phase: info.phase }), title: phaseTitle(info.phase), rule: phaseRule(info.phase), tint: palette.yellow };
   }
 
   const twist = twistById(open.twist);
   if (twist) {
-    return { emoji: twist.emoji, overline: '🌀 CHAOS ROUND', title: twist.title, rule: twist.rule, tint: palette.pink };
+    return { emoji: twist.emoji, overline: t('round.intro.chaosOverline'), title: twistTitle(twist.id), rule: twistRule(twist.id), tint: palette.pink };
   }
 
   const first = session.rounds.length === 1;
   if (first && session.settings.mode === 'taboo') {
     return {
       emoji: '🚫',
-      overline: 'BANNED WORDS',
-      title: 'Don’t say the words',
-      rule: 'The room can’t say anything listed under the card. Slip up and it’s busted: the card’s gone and it costs a point.',
+      overline: t('round.intro.bannedOverline'),
+      title: t('round.intro.bannedTitle'),
+      rule: t('round.intro.bannedRule'),
       tint: palette.red,
     };
   }

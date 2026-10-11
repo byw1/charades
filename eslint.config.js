@@ -9,7 +9,7 @@ const expoConfig = require('eslint-config-expo/flat');
  * src/noNetwork.test.ts, which scans for the same things so the rule cannot
  * be quietly switched off with an eslint-disable comment.
  */
-const offline = 'Deckhead is fully offline: no network calls. See SPEC.md, non-negotiable 1.';
+const offline = 'Charades is fully offline: no network calls. See SPEC.md, non-negotiable 1.';
 
 const networkGlobals = ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource'].map((name) => ({
   name,

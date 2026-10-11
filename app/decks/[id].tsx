@@ -6,6 +6,7 @@ import { DEFAULT_DECK_EMOJI, isPlayable, MIN_PLAYABLE_CARDS, type StoredDeck } f
 import { useDatabase } from '@/hooks/useDatabase';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useNewGameStore } from '@/hooks/useNewGameStore';
+import { t } from '@/i18n';
 import { deleteDeck, getDeck, getDeckSummary, setFavorite, upsertDeck } from '@/storage/deckRepo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Loader } from '@/ui/Loader';
@@ -62,7 +63,7 @@ export default function DeckDetailScreen() {
     }, [database, id]),
   );
 
-  const top = <TopBar leading="back" onLeading={router.back} leadingLabel="Back to decks" />;
+  const top = <TopBar leading="back" onLeading={router.back} leadingLabel={t('decks.detail.backToDecks')} />;
 
   if (state.status === 'loading') {
     return (
@@ -77,7 +78,7 @@ export default function DeckDetailScreen() {
     return (
       <Screen>
         {top}
-        <EmptyState title="That deck is gone" body="It may have been deleted. Head back and pick another." mood="sad" />
+        <EmptyState title={t('decks.gone.title')} body={t('decks.detail.goneBody')} mood="sad" />
       </Screen>
     );
   }
@@ -121,12 +122,12 @@ export default function DeckDetailScreen() {
 
   const confirmDelete = () => {
     Alert.alert(
-      `Delete ${deck.name}?`,
-      `${deck.cards.length} ${deck.cards.length === 1 ? 'card' : 'cards'} will go with it. This can’t be undone.`,
+      t('decks.detail.deleteConfirm.title', { name: deck.name }),
+      t('decks.detail.deleteConfirm.message', { count: deck.cards.length }),
       [
-        { text: 'Keep', style: 'cancel' },
+        { text: t('decks.detail.deleteConfirm.keep'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => {
             if (database.status !== 'ready') return;
@@ -176,52 +177,51 @@ export default function DeckDetailScreen() {
                 <Text style={[styles.description, { color: onAccent }]}>{deck.description}</Text>
               ) : null}
               <View style={styles.pills}>
-                <Pill text={`${deck.cards.length} ${deck.cards.length === 1 ? 'card' : 'cards'}`} ink={onAccent} />
-                {deck.author ? <Pill text={`by ${deck.author}`} ink={onAccent} /> : null}
-                {bundled ? <Pill text="Free deck" ink={onAccent} /> : null}
+                <Pill text={t('decks.cardCount', { count: deck.cards.length })} ink={onAccent} />
+                {deck.author ? <Pill text={t('decks.detail.byAuthor', { author: deck.author })} ink={onAccent} /> : null}
+                {bundled ? <Pill text={t('decks.detail.freeDeck')} ink={onAccent} /> : null}
               </View>
             </View>
 
             <View style={[styles.actions, short && styles.readable]}>
               {playable ? (
-                <Button label="Play this deck" variant="primary" size="lg" icon="play" onPress={play} />
+                <Button label={t('decks.detail.playButton')} variant="primary" size="lg" icon="play" onPress={play} />
               ) : (
                 <Text variant="body" tone="pass" align="center">
-                  Add {MIN_PLAYABLE_CARDS - deck.cards.length} more{' '}
-                  {MIN_PLAYABLE_CARDS - deck.cards.length === 1 ? 'card' : 'cards'} to play this deck.
+                  {t('decks.detail.moreToPlay', { count: MIN_PLAYABLE_CARDS - deck.cards.length })}
                 </Text>
               )}
 
               <View style={styles.row}>
-                <Action icon="share" label="Share" onPress={() => router.push(`/decks/share/${deck.id}`)} />
+                <Action icon="share" label={t('common.share')} onPress={() => router.push(`/decks/share/${deck.id}`)} />
                 <Action
                   icon={favorite ? 'heartFilled' : 'heart'}
-                  label={favorite ? 'Favourited' : 'Favourite'}
+                  label={favorite ? t('decks.detail.favourited') : t('decks.detail.favourite')}
                   tint={favorite ? color.danger : undefined}
                   onPress={() => void toggleFavorite()}
                 />
                 {bundled ? (
                   <>
-                    <Action icon="edit" label="Edit" onPress={() => router.push(`/decks/edit/${deck.id}`)} />
-                    <Action icon="copy" label={busy ? 'Copying' : 'Copy'} onPress={() => void duplicate()} />
+                    <Action icon="edit" label={t('common.edit')} onPress={() => router.push(`/decks/edit/${deck.id}`)} />
+                    <Action icon="copy" label={busy ? t('decks.detail.copying') : t('decks.detail.copy')} onPress={() => void duplicate()} />
                   </>
                 ) : (
                   <>
-                    <Action icon="edit" label="Edit" onPress={() => router.push(`/decks/edit/${deck.id}`)} />
-                    <Action icon="copy" label={busy ? 'Copying' : 'Duplicate'} onPress={() => void duplicate()} />
-                    <Action icon="trash" label="Delete" danger onPress={confirmDelete} />
+                    <Action icon="edit" label={t('common.edit')} onPress={() => router.push(`/decks/edit/${deck.id}`)} />
+                    <Action icon="copy" label={busy ? t('decks.detail.copying') : t('decks.detail.duplicate')} onPress={() => void duplicate()} />
+                    <Action icon="trash" label={t('common.delete')} danger onPress={confirmDelete} />
                   </>
                 )}
               </View>
 
               {bundled ? (
                 <Text variant="caption" tone="faint" align="center">
-                  Edit to hide cards or add your own; your changes stay when the app updates this deck. Copy it to change everything.
+                  {t('decks.detail.freeDeckHint')}
                 </Text>
               ) : null}
             </View>
 
-            <SectionLabel>What’s inside</SectionLabel>
+            <SectionLabel>{t('decks.detail.whatsInside')}</SectionLabel>
           </View>
         }
         renderItem={({ item, index }) => (
@@ -235,7 +235,7 @@ export default function DeckDetailScreen() {
                 </Text>
                 {item.mine ? (
                   <View style={styles.yours}>
-                    <Text style={styles.yoursText}>YOURS</Text>
+                    <Text style={styles.yoursText}>{t('decks.detail.yoursBadge')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -254,11 +254,11 @@ export default function DeckDetailScreen() {
             </View>
           </View>
         )}
-        ListEmptyComponent={<EmptyState title="This deck is empty" body="There are no cards in it yet." />}
+        ListEmptyComponent={<EmptyState title={t('decks.detail.emptyTitle')} body={t('decks.detail.emptyBody')} />}
       />
 
       <View style={[styles.floating, { top: insets.top + space.sm, left: insets.left + gutter - 4 }]}>
-        <CircleButton icon="back" label="Back to decks" tone="scrim" onPress={router.back} />
+        <CircleButton icon="back" label={t('decks.detail.backToDecks')} tone="scrim" onPress={router.back} />
       </View>
     </View>
   );

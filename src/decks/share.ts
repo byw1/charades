@@ -1,4 +1,5 @@
 import { deflate, inflate } from 'pako';
+import { t } from '@/i18n';
 import { decodeBase64Url, encodeBase64Url, utf8Decode, utf8Encode } from './base64url';
 import type { Deck } from './types';
 import { validateDeck, type FailureReason, type ValidationIssue } from './validate';
@@ -76,7 +77,7 @@ export type DecodeFailure = FailureReason | 'unsupportedPayloadVersion' | 'corru
 export function decodeDeck(payload: string): DecodeResult {
   const trimmed = payload.trim();
   if (!trimmed) {
-    return { ok: false, reason: 'corrupt', message: 'There is nothing here to import.' };
+    return { ok: false, reason: 'corrupt', message: t('decks.decode.empty') };
   }
 
   const match = /^D(\d+)\./.exec(trimmed);
@@ -84,7 +85,7 @@ export function decodeDeck(payload: string): DecodeResult {
     return {
       ok: false,
       reason: 'corrupt',
-      message: 'This does not look like a Charades deck.',
+      message: t('decks.decode.notADeck'),
     };
   }
 
@@ -93,27 +94,27 @@ export function decodeDeck(payload: string): DecodeResult {
     return {
       ok: false,
       reason: 'unsupportedPayloadVersion',
-      message: 'This deck was shared from a newer version of Charades. Update the app to open it.',
+      message: t('decks.decode.newerVersion'),
     };
   }
 
   const bytes = decodeBase64Url(trimmed.slice(match[0].length));
   if (!bytes || bytes.length === 0) {
-    return { ok: false, reason: 'corrupt', message: 'This deck is damaged and cannot be read.' };
+    return { ok: false, reason: 'corrupt', message: t('decks.decode.damaged') };
   }
 
   let json: string;
   try {
     json = utf8Decode(inflate(bytes));
   } catch {
-    return { ok: false, reason: 'corrupt', message: 'This deck is damaged and cannot be read.' };
+    return { ok: false, reason: 'corrupt', message: t('decks.decode.damaged') };
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(json);
   } catch {
-    return { ok: false, reason: 'corrupt', message: 'This deck is damaged and cannot be read.' };
+    return { ok: false, reason: 'corrupt', message: t('decks.decode.damaged') };
   }
 
   const result = validateDeck(parsed);
@@ -121,7 +122,7 @@ export function decodeDeck(payload: string): DecodeResult {
     return {
       ok: false,
       reason: result.reason,
-      message: result.errors[0]?.message ?? 'This deck cannot be read.',
+      message: result.errors[0]?.message ?? t('decks.decode.unreadable'),
     };
   }
 

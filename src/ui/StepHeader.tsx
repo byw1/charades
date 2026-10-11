@@ -5,6 +5,7 @@ import { StoryBar } from './ProgressBar';
 import { Text } from './Text';
 import { TopBar } from './TopBar';
 import { gutter, space } from './tokens';
+import { t } from '@/i18n';
 
 export type StepHeaderProps = {
   step: number;
@@ -29,7 +30,7 @@ export function StepHeader({ step, of, title, subtitle, onClose, mood = 'happy' 
       <TopBar
         leading="close"
         onLeading={onClose}
-        leadingLabel="Leave setup"
+        leadingLabel={t('ui.stepHeader.leaveSetup')}
         center={
           <View style={styles.compact}>
             <StoryBar count={of} index={step - 1} />
@@ -45,7 +46,7 @@ export function StepHeader({ step, of, title, subtitle, onClose, mood = 'happy' 
 
   return (
     <View>
-      <TopBar leading="close" onLeading={onClose} leadingLabel="Leave setup" center={<StoryBar count={of} index={step - 1} />} />
+      <TopBar leading="close" onLeading={onClose} leadingLabel={t('ui.stepHeader.leaveSetup')} center={<StoryBar count={of} index={step - 1} />} />
       <View style={styles.ask}>
         <View style={styles.copy}>
           <Text variant="display" accessibilityRole="header">

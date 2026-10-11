@@ -14,6 +14,8 @@ import { useSessionStore } from '@/hooks/useSessionStore';
 import { useSettings } from '@/hooks/useSettings';
 import { useSounds } from '@/hooks/useSounds';
 import { useTilt } from '@/hooks/useTilt';
+import { t } from '@/i18n';
+import { phaseTitle, twistTitle } from '@/i18n/gameText';
 import { Button } from '@/ui/Button';
 import { CardFace } from '@/ui/CardFace';
 import { CircleButton } from '@/ui/CircleButton';
@@ -195,11 +197,11 @@ export default function RoundPlayScreen() {
   // The two full-screen shouts, fitted to the width they get so neither breaks
   // mid-word or runs off the edge. Upright they sit under the mascot and can
   // take two lines; sideways they share the row with it.
-  const timeUpLabel = state.cleared ? 'Hat’s empty!' : 'Time’s up!';
+  const timeUpLabel = state.cleared ? t('round.play.hatEmpty') : t('round.play.timesUp');
   const timeUpFit = upright
     ? fitCardText(timeUpLabel, width - space.xl * 2, 240, { maxSize: 96, minSize: 40, maxLines: 2 })
     : fitCardText(timeUpLabel, width - TIME_UP_MASCOT - space.lg - space.xl * 2, 200, { maxSize: 104, minSize: 40, maxLines: 1 });
-  const pausedFit = upright ? fitCardText('Paused', width - space.xl * 2, 120, { maxSize: 72, minSize: 40, maxLines: 1 }) : null;
+  const pausedFit = upright ? fitCardText(t('round.play.pausedTitle'), width - space.xl * 2, 120, { maxSize: 72, minSize: 40, maxLines: 1 }) : null;
 
   if (state.phase === 'paused') {
     return (
@@ -207,7 +209,7 @@ export default function RoundPlayScreen() {
         style={[styles.paused, upright && styles.stacked]}
         onPress={carryOn}
         accessibilityRole="button"
-        accessibilityLabel={`Paused. ${Math.ceil(left / 1000)} seconds left. Tap to carry on.`}
+        accessibilityLabel={t('round.play.pausedA11y', { count: Math.ceil(left / 1000) })}
       >
         <Mascot size={upright ? 130 : 110} mood="sleepy" />
         <View style={[styles.pausedCopy, upright && styles.centred]}>
@@ -220,14 +222,14 @@ export default function RoundPlayScreen() {
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            Paused
+            {t('round.play.pausedTitle')}
           </Text>
           <Text style={[styles.pausedBody, upright && styles.textCentred]}>
-            {Math.ceil(left / 1000)} seconds left. Tap anywhere to carry on.
+            {t('round.play.pausedBody', { count: Math.ceil(left / 1000) })}
           </Text>
           <View style={[styles.pausedActions, upright && styles.pausedActionsUpright]}>
-            <Button label="End round" icon="flag" size="sm" onPress={endNow} />
-            <Button label="Quit game" icon="home" size="sm" onPress={quit} accessibilityHint="Saved rounds are kept" />
+            <Button label={t('round.play.endRound')} icon="flag" size="sm" onPress={endNow} />
+            <Button label={t('round.play.quitGame')} icon="home" size="sm" onPress={quit} accessibilityHint={t('round.play.quitGameHint')} />
           </View>
         </View>
       </Pressable>
@@ -243,9 +245,9 @@ export default function RoundPlayScreen() {
   const twist = twistById(openRound?.twist);
   const phase = openRound?.phase ? phaseInfo(openRound.phase) : null;
   const rule = phase
-    ? `${phase.emoji} ${phase.title} · ${Math.max(0, hatLeft - got)} left`
+    ? t('round.play.phaseBadge', { emoji: phase.emoji, title: phaseTitle(phase.phase), count: Math.max(0, hatLeft - got) })
     : twist
-      ? `${twist.emoji} ${twist.title}`
+      ? `${twist.emoji} ${twistTitle(twist.id)}`
       : null;
   // A microphone in use should never be a secret.
   const badge = rule;
@@ -271,7 +273,7 @@ export default function RoundPlayScreen() {
           hand holding the phone doesn't hit it. */}
       {state.phase === 'running' ? (
         <View style={[styles.pauseSpot, upright ? { top: insets.top + 8 } : null]}>
-          <CircleButton icon="pause" label="Pause" tone="scrim" size={40} onPress={pause} />
+          <CircleButton icon="pause" label={t('round.play.pause')} tone="scrim" size={40} onPress={pause} />
         </View>
       ) : null}
 
@@ -302,13 +304,13 @@ export default function RoundPlayScreen() {
             style={styles.hitArea}
             onPress={() => onResolve('correct')}
             accessibilityRole="button"
-            accessibilityLabel="Got it"
+            accessibilityLabel={t('round.play.gotIt')}
           />
           <Pressable
             style={styles.hitArea}
             onPress={() => onResolve('pass')}
             accessibilityRole="button"
-            accessibilityLabel="Pass"
+            accessibilityLabel={t('round.play.pass')}
           />
         </View>
       )}
@@ -369,10 +371,10 @@ function SwipeLayer({ onSwipe }: { onSwipe: (outcome: Outcome) => void }) {
         if (outcome) onSwipe(outcome);
       }}
       accessible
-      accessibilityLabel="Swipe up for got it, down to pass"
+      accessibilityLabel={t('round.play.swipeA11y')}
       accessibilityActions={[
-        { name: 'increment', label: 'Got it' },
-        { name: 'decrement', label: 'Pass' },
+        { name: 'increment', label: t('round.play.gotIt') },
+        { name: 'decrement', label: t('round.play.pass') },
       ]}
       onAccessibilityAction={(event) => onSwipe(event.nativeEvent.actionName === 'increment' ? 'correct' : 'pass')}
     />

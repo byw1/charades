@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Text as RNText, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DeckSummary } from '@/decks/types';
+import { t } from '@/i18n';
 import { Loader } from '@/ui/Loader';
 import { CircleButton } from '@/ui/CircleButton';
 import { DeckCard } from '@/ui/DeckCard';
@@ -64,7 +65,7 @@ export function DecksPage({ decks, error, query, onQuery, onOpen, onNew, onImpor
       {/* Sideways, the search moves up into the title row to save height. */}
       <View style={[styles.header, short && styles.headerShort]}>
         <Text variant={short ? 'display' : 'hero'} accessibilityRole="header">
-          Decks
+          {t('home.decks.title')}
         </Text>
         {short ? (
           <View style={styles.inlineSearch}>
@@ -72,15 +73,15 @@ export function DecksPage({ decks, error, query, onQuery, onOpen, onNew, onImpor
           </View>
         ) : null}
         <View style={styles.actions}>
-          <CircleButton icon="download" label="Import a deck" onPress={onImport} />
-          <CircleButton icon="plus" label="New deck" tone="brand" onPress={onNew} />
+          <CircleButton icon="download" label={t('home.decks.importButton')} onPress={onImport} />
+          <CircleButton icon="plus" label={t('home.decks.newButton')} tone="brand" onPress={onNew} />
         </View>
       </View>
 
       {short ? null : <SearchField value={query} onChangeText={onQuery} />}
 
       {error ? (
-        <EmptyState title="Couldn’t open your decks" body={error} mood="sad" />
+        <EmptyState title={t('home.decks.loadError')} body={error} mood="sad" />
       ) : !decks ? (
         <Loader />
       ) : (
@@ -90,37 +91,37 @@ export function DecksPage({ decks, error, query, onQuery, onOpen, onNew, onImpor
           showsVerticalScrollIndicator={false}
         >
           {searching && decks.length === 0 ? (
-            <EmptyState title="Nothing matches that" body={`No deck or card mentions “${query.trim()}”.`} />
+            <EmptyState title={t('home.decks.noMatchesTitle')} body={t('home.decks.noMatchesBody', { query: query.trim() })} />
           ) : null}
 
           {!searching || mine.length > 0 ? (
             <View>
-              <SectionLabel>Yours</SectionLabel>
+              <SectionLabel>{t('home.decks.yours')}</SectionLabel>
               <View style={styles.grid}>
                 {mine.map((deck) => (
                   <DeckCard key={deck.id} deck={deck} onPress={() => onOpen(deck.id)} style={{ width: tile }} />
                 ))}
                 {searching ? null : (
-                  <Tap onPress={onNew} accessibilityLabel="Make a deck" style={{ width: tile }} contentStyle={styles.newTile}>
+                  <Tap onPress={onNew} accessibilityLabel={t('home.decks.makeDeck')} style={{ width: tile }} contentStyle={styles.newTile}>
                     <View style={styles.plus}>
                       <Icon name="plus" size={28} color={color.ink} weight={3.5} />
                     </View>
                     <Text variant="heading" align="center">
-                      Make a deck
+                      {t('home.decks.makeDeck')}
                     </Text>
                     <Text variant="caption" tone="muted" align="center">
-                      Type cards, paste a list or add photos
+                      {t('home.decks.makeDeckDetail')}
                     </Text>
                   </Tap>
                 )}
                 {searching ? null : (
-                  <Tap onPress={onGroup} accessibilityLabel="Make a deck about your group" style={{ width: tile }} contentStyle={styles.newTile}>
+                  <Tap onPress={onGroup} accessibilityLabel={t('home.decks.groupDeckLabel')} style={{ width: tile }} contentStyle={styles.newTile}>
                     <RNText style={styles.tileEmoji}>👯</RNText>
                     <Text variant="heading" align="center">
-                      About your group
+                      {t('home.decks.groupDeckTitle')}
                     </Text>
                     <Text variant="caption" tone="muted" align="center">
-                      Answer five questions, get a deck only you can play
+                      {t('home.decks.groupDeckDetail')}
                     </Text>
                   </Tap>
                 )}
@@ -130,7 +131,7 @@ export function DecksPage({ decks, error, query, onQuery, onOpen, onNew, onImpor
 
           {bundled.length > 0 ? (
             <View>
-              <SectionLabel>Free decks</SectionLabel>
+              <SectionLabel>{t('home.decks.free')}</SectionLabel>
               <View style={styles.grid}>
                 {bundled.map((deck) => (
                   <DeckCard key={deck.id} deck={deck} onPress={() => onOpen(deck.id)} style={{ width: tile }} />

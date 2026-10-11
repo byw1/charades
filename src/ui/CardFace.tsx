@@ -3,6 +3,7 @@ import { isEmojiCard } from '@/decks/types';
 import { cardTextOn } from './contrast';
 import { CARD_LETTER_SPACING, fitCardText } from './fitText';
 import { font, radius } from './tokens';
+import { t } from '@/i18n';
 
 export type CardFaceProps = {
   text: string;
@@ -109,9 +110,9 @@ export function CardFace({ text, accentColor, note, taboo, image }: CardFaceProp
           ) : null}
 
           {forbidden ? (
-            <View style={styles.taboo} accessibilityLabel={`Don't say ${forbidden.join(', ')}`}>
+            <View style={styles.taboo} accessibilityLabel={t('ui.cardFace.dontSayA11y', { words: forbidden.join(', ') })}>
               <Text style={styles.tabooLabel} allowFontScaling={false}>
-                🚫 DON’T SAY
+                {t('ui.cardFace.dontSay')}
               </Text>
               <View style={styles.tabooWords}>
                 {forbidden.map((word) => (

@@ -1,5 +1,6 @@
 import { makeCardId, makeDeckId, type RandomSource } from './ids';
 import { CARD_TEXT_SOFT_CAP, CURRENT_DECK_SCHEMA_VERSION, type Card, type Deck } from './types';
+import { t } from '@/i18n';
 import { normaliseTaboo } from './validate';
 
 /**
@@ -118,7 +119,7 @@ export function parseTabooInput(input: string): string[] {
 export function addPhotoCards(deck: Deck, photos: readonly string[], now: string, random?: RandomSource): Deck {
   if (photos.length === 0) return deck;
   const start = deck.cards.filter((card) => card.image).length;
-  const cards = photos.map((image, i): Card => ({ id: makeCardId(random), text: `Photo ${start + i + 1}`, note: null, image }));
+  const cards = photos.map((image, i): Card => ({ id: makeCardId(random), text: t('editor.photoCardName', { n: start + i + 1 }), note: null, image }));
   return touch({ ...deck, cards: [...deck.cards, ...cards] }, now);
 }
 
@@ -232,14 +233,28 @@ export function duplicateDeck(deck: Deck, now: string, random?: RandomSource): D
   };
 }
 
+/**
+ * Reads a name back out of a copy-name message such as "{name} copy {n}", so
+ * a copy of a copy is numbered rather than called "copy copy" in any language.
+ */
+function matchCopyName(template: string, value: string): { base: string; n: number } | null {
+  const escaped = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^${escaped.replace('\\{name\\}', '(.*?)').replace('\\{n\\}', '(\\d+)')}$`);
+  const match = pattern.exec(value);
+  if (!match) return null;
+  const nameFirst = template.indexOf('{n}') === -1 || template.indexOf('{name}') < template.indexOf('{n}');
+  const base = (nameFirst ? match[1] : match[2]) ?? '';
+  const n = Number((nameFirst ? match[2] : match[1]) ?? 1);
+  return { base, n };
+}
+
 /** "Animals" becomes "Animals copy", then "Animals copy 2". */
 export function nextCopyName(name: string): string {
-  const match = /^(.*?) copy(?: (\d+))?$/.exec(name.trim());
-  if (!match) return `${name.trim()} copy`;
-
-  const base = match[1]!;
-  const n = match[2] ? Number(match[2]) : 1;
-  return `${base} copy ${n + 1}`;
+  const trimmed = name.trim();
+  const match =
+    matchCopyName(t('decks.copyName.numbered'), trimmed) ?? matchCopyName(t('decks.copyName.first'), trimmed);
+  if (!match) return t('decks.copyName.first', { name: trimmed });
+  return t('decks.copyName.numbered', { name: match.base, n: match.n + 1 });
 }
 
 /** Whether a draft differs from what was loaded, for the unsaved-changes prompt. */

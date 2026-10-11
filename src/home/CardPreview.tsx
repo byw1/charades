@@ -3,6 +3,7 @@ import { FlatList, Modal, StyleSheet, Text as RNText, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Card } from '@/decks/types';
 import { useDatabase } from '@/hooks/useDatabase';
+import { t } from '@/i18n';
 import { getDeck } from '@/storage/deckRepo';
 import { Button } from '@/ui/Button';
 import { cardTextOn } from '@/ui/contrast';
@@ -72,13 +73,13 @@ export function CardPreview({ visible, title, deckIds, shuffle = false, onClose,
       supportedOrientations={['portrait', 'landscape']}
     >
       <SafeAreaView style={styles.sheet} edges={['top', 'bottom', 'left', 'right']}>
-        <TopBar leading="close" onLeading={onClose} leadingLabel="Close preview" title={title} />
+        <TopBar leading="close" onLeading={onClose} leadingLabel={t('home.preview.close')} title={title} />
 
         {!cards ? (
-          <Loader label="Dealing the cards" />
+          <Loader label={t('home.preview.loading')} />
         ) : cards.length === 0 ? (
           <Text variant="body" tone="muted" align="center" style={styles.empty}>
-            No cards to show yet.
+            {t('home.preview.empty')}
           </Text>
         ) : (
           <View style={styles.body}>
@@ -98,14 +99,17 @@ export function CardPreview({ visible, title, deckIds, shuffle = false, onClose,
               getItemLayout={(_data, i) => ({ length: width, offset: width * i, index: i })}
             />
             <Text variant="label" tone="muted" align="center">
-              {shuffle ? 'A shuffled handful · ' : ''}Card {Math.min(index + 1, cards.length)} of {cards.length} · swipe for more
+              {t(shuffle ? 'home.preview.counterShuffled' : 'home.preview.counter', {
+                index: Math.min(index + 1, cards.length),
+                total: cards.length,
+              })}
             </Text>
           </View>
         )}
 
         <View style={[styles.actions, short && styles.actionsRow]}>
-          {onPlay ? <Button label="Play these" variant="primary" icon="play" size="lg" onPress={onPlay} style={styles.grow} /> : null}
-          {onEdit ? <Button label="Edit cards" icon="edit" size="lg" onPress={onEdit} style={styles.grow} /> : null}
+          {onPlay ? <Button label={t('home.preview.play')} variant="primary" icon="play" size="lg" onPress={onPlay} style={styles.grow} /> : null}
+          {onEdit ? <Button label={t('home.preview.edit')} icon="edit" size="lg" onPress={onEdit} style={styles.grow} /> : null}
         </View>
       </SafeAreaView>
     </Modal>
@@ -132,13 +136,13 @@ function MiniCard({ card, width, height }: { card: PreviewCard; width: number; h
       {card.note ? <RNText style={[styles.note, { color: ink }]}>{card.note}</RNText> : null}
       {card.taboo ? (
         <View style={styles.taboo}>
-          <RNText style={styles.tabooLabel}>🚫 DON’T SAY</RNText>
+          <RNText style={styles.tabooLabel}>{t('home.preview.dontSay')}</RNText>
           <RNText style={styles.tabooWords}>{card.taboo.join(' · ')}</RNText>
         </View>
       ) : null}
       {card.mine ? (
         <View style={styles.yours}>
-          <RNText style={styles.yoursText}>YOURS</RNText>
+          <RNText style={styles.yoursText}>{t('home.preview.yours')}</RNText>
         </View>
       ) : null}
     </View>

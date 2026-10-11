@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useHaptics } from '@/hooks/useHaptics';
 import { type InputMode, useSettings, useSettingsStore } from '@/hooks/useSettings';
+import { t, type MessageKey } from '@/i18n';
 import { Chip } from '@/ui/Chip';
 import { Icon, type IconName } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
@@ -32,20 +33,20 @@ export default function SettingsScreen() {
   const setTheme = useSettingsStore((s) => s.setTheme);
   const switchTheme = (next: ThemeChoice) => {
     if (next === settings.theme) return;
-    Alert.alert('Switch the look?', 'The app restarts for a second to repaint. Your game, decks and settings are all kept.', [
-      { text: 'Not now', style: 'cancel' },
-      { text: 'Switch', onPress: () => setTheme(next) },
+    Alert.alert(t('settings.switchTheme.title'), t('settings.switchTheme.message'), [
+      { text: t('settings.switchTheme.cancel'), style: 'cancel' },
+      { text: t('settings.switchTheme.confirm'), onPress: () => setTheme(next) },
     ]);
   };
 
   const confirmReset = () => {
     Alert.alert(
-      'Reset settings?',
-      'Your preferences go back to their defaults. Your decks, games, videos and streak are not touched.',
+      t('settings.reset.title'),
+      t('settings.reset.message'),
       [
-        { text: 'Keep', style: 'cancel' },
+        { text: t('settings.reset.cancel'), style: 'cancel' },
         {
-          text: 'Reset',
+          text: t('settings.reset.confirm'),
           style: 'destructive',
           onPress: () => {
             resetAll();
@@ -56,76 +57,78 @@ export default function SettingsScreen() {
     );
   };
 
+  const answerNote = ANSWER_MODES.find((mode) => mode.key === settings.inputMode)?.note;
+
   return (
     <Screen>
-      <TopBar leading="close" onLeading={router.back} leadingLabel="Close settings" title="Settings" />
+      <TopBar leading="close" onLeading={router.back} leadingLabel={t('settings.close')} title={t('settings.title')} />
 
       <ScrollView contentContainerStyle={styles.body}>
         <View>
-          <SectionLabel>How you answer</SectionLabel>
+          <SectionLabel>{t('settings.answer.heading')}</SectionLabel>
           <View style={styles.choices}>
             {ANSWER_MODES.map((mode) => (
               <Chip
                 key={mode.key}
                 grow
                 emoji={mode.emoji}
-                label={mode.label}
-                detail={mode.detail}
+                label={t(mode.label)}
+                detail={t(mode.detail)}
                 selected={settings.inputMode === mode.key}
                 onPress={() => set('inputMode', mode.key)}
-                accessibilityLabel={`${mode.label} to answer`}
+                accessibilityLabel={t('settings.answer.accessibilityLabel', { mode: t(mode.label) })}
               />
             ))}
           </View>
           <Text variant="caption" tone="muted" style={styles.note}>
-            {ANSWER_MODES.find((mode) => mode.key === settings.inputMode)?.note}
+            {answerNote ? t(answerNote) : null}
           </Text>
         </View>
 
         <View>
-          <SectionLabel>Look</SectionLabel>
+          <SectionLabel>{t('settings.look.heading')}</SectionLabel>
           <View style={styles.choices}>
             {THEME_CHOICES.map((choice) => (
               <Chip
                 key={choice.key}
                 grow
                 emoji={choice.emoji}
-                label={choice.label}
+                label={t(choice.label)}
                 selected={settings.theme === choice.key}
                 onPress={() => switchTheme(choice.key)}
-                accessibilityLabel={`${choice.label} theme`}
+                accessibilityLabel={t('settings.look.accessibilityLabel', { theme: t(choice.label) })}
               />
             ))}
           </View>
           <Text variant="caption" tone="muted" style={styles.note}>
-            Light is easier to see outside in the sun. Auto follows your phone. Switching restarts the app for a second; nothing is lost.
+            {t('settings.look.note')}
           </Text>
         </View>
 
         <View>
-          <SectionLabel>Sound and feel</SectionLabel>
+          <SectionLabel>{t('settings.feel.heading')}</SectionLabel>
           <Group>
             <SwitchRow
               icon="sound"
               tint={palette.orange}
-              title="Sound effects"
-              detail="A ding for got it, a whoosh for a pass, the countdown and the buzzer."
+              title={t('settings.feel.sound')}
+              detail={t('settings.feel.soundDetail')}
               value={settings.sound}
               onChange={(value) => set('sound', value)}
             />
             <SwitchRow
               icon="phone"
               tint={palette.purple}
-              title="Haptics"
-              detail="Buzzes tell the holder what happened."
+              title={t('settings.feel.haptics')}
+              detail={t('settings.feel.hapticsDetail')}
               value={settings.haptics}
               onChange={(value) => set('haptics', value)}
             />
             <SwitchRow
               icon="sun"
               tint={palette.yellow}
-              title="Max brightness"
-              detail="So the card reads in a dark room."
+              title={t('settings.feel.brightness')}
+              detail={t('settings.feel.brightnessDetail')}
               value={settings.boostBrightness}
               onChange={(value) => set('boostBrightness', value)}
               last
@@ -134,19 +137,19 @@ export default function SettingsScreen() {
         </View>
 
         <View>
-          <SectionLabel>More</SectionLabel>
+          <SectionLabel>{t('settings.more.heading')}</SectionLabel>
           <Group>
-            <NavRow icon="help" tint={palette.blue} title="How to play" onPress={() => router.push('/welcome?replay=1')} />
-            <NavRow icon="reset" tint={palette.red} title="Reset settings" onPress={confirmReset} last />
+            <NavRow icon="help" tint={palette.blue} title={t('settings.more.howToPlay')} onPress={() => router.push('/welcome?replay=1')} />
+            <NavRow icon="reset" tint={palette.red} title={t('settings.more.reset')} onPress={confirmReset} last />
           </Group>
         </View>
 
         <View style={styles.colophon}>
           <Text variant="label" tone="faint" align="center">
-            Charades {Constants.expoConfig?.version ?? ''}
+            {t('settings.version', { appName: t('common.appName'), version: Constants.expoConfig?.version ?? '' })}
           </Text>
           <Text variant="caption" tone="faint" align="center">
-            Works offline. No accounts, no ads, no tracking.{'\n'}Nothing you make leaves your phone unless you share it.
+            {t('settings.privacy')}
           </Text>
         </View>
       </ScrollView>
@@ -154,34 +157,35 @@ export default function SettingsScreen() {
   );
 }
 
-const ANSWER_MODES: readonly { key: InputMode; emoji: string; label: string; detail: string; note: string }[] = [
+// Copy below is message keys, translated on render.
+const ANSWER_MODES: readonly { key: InputMode; emoji: string; label: MessageKey; detail: MessageKey; note: MessageKey }[] = [
   {
     key: 'tilt',
     emoji: '🙃',
-    label: 'Tilt',
-    detail: 'Tip down got it, up pass',
-    note: 'Tilt replaces tap for the whole round, so a hand resting on the screen can’t answer for you. If the motion sensor doesn’t respond, tap takes over by itself.',
+    label: 'settings.answer.tilt.label',
+    detail: 'settings.answer.tilt.detail',
+    note: 'settings.answer.tilt.note',
   },
   {
     key: 'swipe',
     emoji: '☝️',
-    label: 'Swipe',
-    detail: 'Up got it, down pass',
-    note: 'Swipe anywhere on the screen: up for got it, down to pass. No aiming, and a resting hand won’t count.',
+    label: 'settings.answer.swipe.label',
+    detail: 'settings.answer.swipe.detail',
+    note: 'settings.answer.swipe.note',
   },
   {
     key: 'tap',
     emoji: '👆',
-    label: 'Tap',
-    detail: 'Top got it, bottom pass',
-    note: 'The top half of the screen is got it, the bottom half is pass.',
+    label: 'settings.answer.tap.label',
+    detail: 'settings.answer.tap.detail',
+    note: 'settings.answer.tap.note',
   },
 ];
 
-const THEME_CHOICES: readonly { key: ThemeChoice; emoji: string; label: string }[] = [
-  { key: 'dark', emoji: '🌙', label: 'Dark' },
-  { key: 'light', emoji: '☀️', label: 'Light' },
-  { key: 'system', emoji: '📱', label: 'Auto' },
+const THEME_CHOICES: readonly { key: ThemeChoice; emoji: string; label: MessageKey }[] = [
+  { key: 'dark', emoji: '🌙', label: 'settings.look.dark' },
+  { key: 'light', emoji: '☀️', label: 'settings.look.light' },
+  { key: 'system', emoji: '📱', label: 'settings.look.system' },
 ];
 
 function NavRow({

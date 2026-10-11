@@ -19,15 +19,18 @@ import { useSettingsStore } from '@/hooks/useSettings';
 import { useStartGame } from '@/hooks/useStartGame';
 import { getDeck, listDeckSummaries, searchDeckSummaries, setFavorite } from '@/storage/deckRepo';
 import { getResumableSession, listSessions } from '@/storage/sessionRepo';
+import { t, type MessageKey } from '@/i18n';
+import { teamName } from '@/i18n/gameText';
 import { BottomBar, useBottomBarHeight, type BottomTab } from '@/ui/BottomBar';
 import { Tap } from '@/ui/Tap';
 import { Text } from '@/ui/Text';
 import { color, font, radius, space } from '@/ui/tokens';
 
-const TABS: readonly BottomTab[] = [
-  { key: 'decks', label: 'Decks', icon: 'decks' },
-  { key: 'play', label: 'Play', icon: 'play' },
-  { key: 'me', label: 'You', icon: 'user' },
+// Labels are keys, translated on render.
+const TABS: readonly (Omit<BottomTab, 'label'> & { labelKey: MessageKey })[] = [
+  { key: 'decks', labelKey: 'home.tabs.decks', icon: 'decks' },
+  { key: 'play', labelKey: 'home.tabs.play', icon: 'play' },
+  { key: 'me', labelKey: 'home.tabs.me', icon: 'user' },
 ];
 
 const PLAY = 1;
@@ -172,14 +175,14 @@ export default function HomeScreen() {
 
   const chooseSort = () =>
     Alert.alert(
-      'Order decks by',
-      'Favourites always come first.',
+      t('home.sort.title'),
+      t('home.sort.message'),
       [
         ...DECK_SORTS.map((option) => ({
-          text: option.key === deckSort ? `${option.label} ✓` : option.label,
+          text: option.key === deckSort ? t('home.sort.current', { label: t(option.labelKey) }) : t(option.labelKey),
           onPress: () => setSetting('deckSort', option.key),
         })),
-        { text: 'Cancel', style: 'cancel' as const },
+        { text: t('common.cancel'), style: 'cancel' as const },
       ],
     );
 
@@ -197,6 +200,8 @@ export default function HomeScreen() {
     resumeSession(saved, decks, Date.now() >>> 0);
     router.push('/round/standings');
   };
+
+  const sortOption = DECK_SORTS.find((option) => option.key === deckSort);
 
   return (
     <View style={styles.screen}>
@@ -250,7 +255,7 @@ export default function HomeScreen() {
             const id = lens.deckIds[0];
             if (id) router.push(`/decks/edit/${id}`);
           }}
-          sortLabel={DECK_SORTS.find((option) => option.key === deckSort)?.label ?? 'Sort'}
+          sortLabel={sortOption ? t(sortOption.labelKey) : t('home.sort.fallback')}
           onSort={chooseSort}
           roundSeconds={quickSeconds}
           onRoundSeconds={() => setSetting('quickSeconds', nextRoundSeconds(quickSeconds))}
@@ -267,7 +272,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View style={styles.bar}>
-        <BottomBar tabs={TABS} active={page} onSelect={goTo} />
+        <BottomBar tabs={TABS.map(({ labelKey, ...tab }) => ({ ...tab, label: t(labelKey) }))} active={page} onSelect={goTo} />
       </View>
 
       <CardPreview
@@ -304,25 +309,25 @@ function ResumeBanner({ session, onPress }: { session: Session; onPress: () => v
   const table = standings(session);
   const summary =
     played === 0
-      ? 'Not started yet'
+      ? t('home.resume.notStarted')
       : isJustPlay(session.teams)
-        ? `${played} ${played === 1 ? 'round' : 'rounds'} · ${table[0]?.score ?? 0} pts`
+        ? t('home.resume.soloSummary', { count: played, score: table[0]?.score ?? 0 })
         : table
             .slice(0, 2)
-            .map((s) => `${s.teamName} ${s.score}`)
+            .map((s) => t('home.resume.teamScore', { team: teamName({ name: s.teamName }, session.teams), score: s.score }))
             .join(' · ');
 
   return (
-    <Tap onPress={onPress} squish={0.97} accessibilityLabel={`Game in progress, ${summary}. Resume.`} contentStyle={styles.banner}>
+    <Tap onPress={onPress} squish={0.97} accessibilityLabel={t('home.resume.accessibilityLabel', { summary })} contentStyle={styles.banner}>
       <View style={styles.bannerDot} />
       <View style={styles.bannerCopy}>
-        <Text style={styles.bannerTitle}>Game in progress</Text>
+        <Text style={styles.bannerTitle}>{t('home.resume.title')}</Text>
         <Text variant="caption" style={styles.bannerSub} numberOfLines={1}>
           {summary}
         </Text>
       </View>
       <View style={styles.bannerButton}>
-        <Text style={styles.bannerButtonText}>Resume</Text>
+        <Text style={styles.bannerButtonText}>{t('home.resume.button')}</Text>
       </View>
     </Tap>
   );

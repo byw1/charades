@@ -1,4 +1,4 @@
-import { buildGroupDeck, DEFAULT_GROUP_DECK_NAME, GROUP_PROMPTS, groupCards } from './group';
+import { buildGroupDeck, defaultGroupDeckName, GROUP_PROMPTS, groupCards } from './group';
 import { validateDeck } from './validate';
 
 const now = '2026-10-07T20:00:00Z';
@@ -35,7 +35,7 @@ describe('group deck builder', () => {
       accentColor: '#FF3D8B',
       now,
     });
-    expect(deck.name).toBe(DEFAULT_GROUP_DECK_NAME);
+    expect(deck.name).toBe(defaultGroupDeckName());
     const result = validateDeck(deck);
     expect(result.ok).toBe(true);
     expect(result.warnings).toEqual([]);

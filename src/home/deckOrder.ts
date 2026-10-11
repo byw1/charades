@@ -5,12 +5,15 @@
  * name, so the order never shuffles between visits.
  */
 
+import type { MessageKey } from '@/i18n';
+
 export type DeckSort = 'played' | 'az' | 'newest';
 
-export const DECK_SORTS: readonly { key: DeckSort; label: string }[] = [
-  { key: 'played', label: 'Most played' },
-  { key: 'az', label: 'A–Z' },
-  { key: 'newest', label: 'Newest' },
+/** `labelKey` is translated where it is shown, never here. */
+export const DECK_SORTS: readonly { key: DeckSort; labelKey: MessageKey }[] = [
+  { key: 'played', labelKey: 'home.sort.mostPlayed' },
+  { key: 'az', labelKey: 'home.sort.az' },
+  { key: 'newest', labelKey: 'home.sort.newest' },
 ];
 
 export type Orderable = { id: string; name: string; favorite: boolean; updatedAt: string };

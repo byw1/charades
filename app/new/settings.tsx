@@ -4,6 +4,7 @@ import { HAT_SIZES, ROUND_SECONDS_PRESETS, type GameMode, type WinCondition } fr
 import { useDatabase } from '@/hooks/useDatabase';
 import { useNewGameStore } from '@/hooks/useNewGameStore';
 import { useStartGame } from '@/hooks/useStartGame';
+import { t, type MessageKey } from '@/i18n';
 import { Button } from '@/ui/Button';
 import { Chip } from '@/ui/Chip';
 import { useLayout } from '@/ui/layout';
@@ -12,17 +13,18 @@ import { SectionLabel } from '@/ui/Section';
 import { StepHeader } from '@/ui/StepHeader';
 import { gutter, space } from '@/ui/tokens';
 
-const WIN_CONDITIONS: { label: string; emoji: string; value: WinCondition; help: string }[] = [
-  { label: 'Rounds', emoji: '🔁', value: { kind: 'rounds', count: 4 }, help: 'Same turns each' },
-  { label: 'Score', emoji: '🎯', value: { kind: 'score', target: 20 }, help: 'First to a target' },
-  { label: 'Deck out', emoji: '🃏', value: { kind: 'deckExhausted' }, help: 'Until cards run out' },
-  { label: 'Endless', emoji: '♾️', value: { kind: 'endless' }, help: 'Keep going' },
+// Labels are catalog keys, translated while rendering.
+const WIN_CONDITIONS: { label: MessageKey; emoji: string; value: WinCondition; help: MessageKey }[] = [
+  { label: 'newGame.settings.ends.rounds.label', emoji: '🔁', value: { kind: 'rounds', count: 4 }, help: 'newGame.settings.ends.rounds.help' },
+  { label: 'newGame.settings.ends.score.label', emoji: '🎯', value: { kind: 'score', target: 20 }, help: 'newGame.settings.ends.score.help' },
+  { label: 'newGame.settings.ends.deckOut.label', emoji: '🃏', value: { kind: 'deckExhausted' }, help: 'newGame.settings.ends.deckOut.help' },
+  { label: 'newGame.settings.ends.endless.label', emoji: '♾️', value: { kind: 'endless' }, help: 'newGame.settings.ends.endless.help' },
 ];
 
-const MODES: { mode: GameMode; label: string; emoji: string; help: string }[] = [
-  { mode: 'classic', label: 'Classic', emoji: '🗣️', help: 'Any clue goes' },
-  { mode: 'taboo', label: 'Banned', emoji: '🚫', help: 'Some words off limits' },
-  { mode: 'threeRounds', label: '3 Rounds', emoji: '🎩', help: 'Talk, one word, act' },
+const MODES: { mode: GameMode; label: MessageKey; emoji: string; help: MessageKey }[] = [
+  { mode: 'classic', label: 'newGame.settings.modes.classic.label', emoji: '🗣️', help: 'newGame.settings.modes.classic.help' },
+  { mode: 'taboo', label: 'newGame.settings.modes.taboo.label', emoji: '🚫', help: 'newGame.settings.modes.taboo.help' },
+  { mode: 'threeRounds', label: 'newGame.settings.modes.threeRounds.label', emoji: '🎩', help: 'newGame.settings.modes.threeRounds.help' },
 ];
 
 const ROUND_COUNTS = [2, 3, 4, 6, 8];
@@ -59,23 +61,23 @@ export default function NewGameSettingsScreen() {
       <StepHeader
         step={3}
         of={3}
-        title="House rules"
-        subtitle="Or just hit start. The defaults are good."
+        title={t('newGame.settings.title')}
+        subtitle={t('newGame.settings.subtitle')}
         onClose={() => router.dismissAll()}
         mood="excited"
       />
 
       <ScrollView contentContainerStyle={styles.body}>
         <View>
-          <SectionLabel>Mode</SectionLabel>
+          <SectionLabel>{t('newGame.settings.modeSection')}</SectionLabel>
           <View style={styles.row}>
             {MODES.map((option) => (
               <Chip
                 key={option.mode}
                 grow
                 emoji={option.emoji}
-                label={option.label}
-                detail={option.help}
+                label={t(option.label)}
+                detail={t(option.help)}
                 selected={settings.mode === option.mode}
                 onPress={() => setGameMode(option.mode)}
               />
@@ -88,10 +90,10 @@ export default function NewGameSettingsScreen() {
                 <Chip
                   key={size}
                   grow
-                  label={`${size} cards`}
+                  label={t('newGame.settings.hatSize', { count: size })}
                   selected={settings.hatSize === size}
                   onPress={() => setHatSize(size)}
-                  accessibilityLabel={`${size} cards in the hat`}
+                  accessibilityLabel={t('newGame.settings.hatSizeA11y', { count: size })}
                 />
               ))}
             </View>
@@ -99,16 +101,16 @@ export default function NewGameSettingsScreen() {
         </View>
 
         <View>
-          <SectionLabel>Round length</SectionLabel>
+          <SectionLabel>{t('newGame.settings.roundLength')}</SectionLabel>
           <View style={styles.row}>
             {ROUND_SECONDS_PRESETS.map((preset) => (
               <Chip
                 key={preset}
                 grow
-                label={`${preset}s`}
+                label={t('newGame.settings.seconds', { count: preset })}
                 selected={settings.roundSeconds === preset}
                 onPress={() => setRoundSeconds(preset)}
-                accessibilityLabel={`${preset} second rounds`}
+                accessibilityLabel={t('newGame.settings.secondsA11y', { count: preset })}
               />
             ))}
           </View>
@@ -116,15 +118,15 @@ export default function NewGameSettingsScreen() {
 
         {threeRounds ? null : (
           <View>
-            <SectionLabel>Game ends on</SectionLabel>
+            <SectionLabel>{t('newGame.settings.endsOn')}</SectionLabel>
             <View style={styles.row}>
               {WIN_CONDITIONS.map((option) => (
                 <Chip
                   key={option.label}
                   grow
                   emoji={option.emoji}
-                  label={option.label}
-                  detail={option.help}
+                  label={t(option.label)}
+                  detail={t(option.help)}
                   // Two by two upright, four across sideways.
                   style={short ? null : styles.half}
                   selected={settings.winCondition.kind === option.value.kind}
@@ -142,7 +144,7 @@ export default function NewGameSettingsScreen() {
                     label={String(count)}
                     selected={settings.winCondition.kind === 'rounds' && settings.winCondition.count === count}
                     onPress={() => setWinCondition({ kind: 'rounds', count })}
-                    accessibilityLabel={`${count} rounds each`}
+                    accessibilityLabel={t('newGame.settings.roundsEachA11y', { count })}
                   />
                 ))}
               </View>
@@ -157,7 +159,7 @@ export default function NewGameSettingsScreen() {
                     label={String(target)}
                     selected={settings.winCondition.kind === 'score' && settings.winCondition.target === target}
                     onPress={() => setWinCondition({ kind: 'score', target })}
-                    accessibilityLabel={`First to ${target} points`}
+                    accessibilityLabel={t('newGame.settings.firstToA11y', { count: target })}
                   />
                 ))}
               </View>
@@ -166,22 +168,22 @@ export default function NewGameSettingsScreen() {
         )}
 
         <View>
-          <SectionLabel>Passing</SectionLabel>
+          <SectionLabel>{t('newGame.settings.passing')}</SectionLabel>
           <View style={styles.row}>
             <Chip
               grow
               emoji="😌"
-              label="Free"
-              detail="Pass all you like"
+              label={t('newGame.settings.pass.free.label')}
+              detail={t('newGame.settings.pass.free.detail')}
               selected={settings.passPenalty === 0}
               onPress={() => setPassPenalty(0)}
-              accessibilityLabel="Passes cost nothing"
+              accessibilityLabel={t('newGame.settings.pass.free.a11y')}
             />
             <Chip
               grow
               emoji="😬"
-              label="Costs a point"
-              detail="Think before you skip"
+              label={t('newGame.settings.pass.penalty.label')}
+              detail={t('newGame.settings.pass.penalty.detail')}
               selected={settings.passPenalty === 1}
               onPress={() => setPassPenalty(1)}
             />
@@ -189,27 +191,27 @@ export default function NewGameSettingsScreen() {
         </View>
 
         <View>
-          <SectionLabel>Extras</SectionLabel>
+          <SectionLabel>{t('newGame.settings.extras')}</SectionLabel>
           <View style={styles.row}>
             {threeRounds ? null : (
               <Chip
                 grow
                 emoji="🌀"
-                label="Chaos"
-                detail="A wild rule some rounds"
+                label={t('newGame.settings.chaos.label')}
+                detail={t('newGame.settings.chaos.detail')}
                 selected={settings.chaos}
                 onPress={() => setChaos(!settings.chaos)}
-                accessibilityLabel={`Chaos twists, ${settings.chaos ? 'on' : 'off'}`}
+                accessibilityLabel={t(settings.chaos ? 'newGame.settings.chaos.a11yOn' : 'newGame.settings.chaos.a11yOff')}
               />
             )}
             <Chip
               grow
               emoji="😈"
-              label="Forfeits"
-              detail="A dare for last place"
+              label={t('newGame.settings.forfeits.label')}
+              detail={t('newGame.settings.forfeits.detail')}
               selected={settings.forfeits}
               onPress={() => setForfeits(!settings.forfeits)}
-              accessibilityLabel={`Forfeits, ${settings.forfeits ? 'on' : 'off'}`}
+              accessibilityLabel={t(settings.forfeits ? 'newGame.settings.forfeits.a11yOn' : 'newGame.settings.forfeits.a11yOff')}
             />
           </View>
         </View>
@@ -217,7 +219,7 @@ export default function NewGameSettingsScreen() {
 
       <Footer>
         <Button
-          label={starting ? 'Starting' : 'Start game'}
+          label={starting ? t('newGame.settings.starting') : t('newGame.settings.start')}
           variant="primary"
           size="lg"
           icon="play"

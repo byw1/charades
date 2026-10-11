@@ -3,6 +3,7 @@ import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { color, font, palette } from './tokens';
+import { t } from '@/i18n';
 
 export type MascotMood = 'happy' | 'excited' | 'wow' | 'sad' | 'thinking' | 'sleepy' | 'wink';
 
@@ -219,7 +220,7 @@ export function Mascot({
   );
 
   return (
-    <View style={{ width: size, height: size }} accessible accessibilityRole="image" accessibilityLabel="Dex, the Charades mascot">
+    <View style={{ width: size, height: size }} accessible accessibilityRole="image" accessibilityLabel={t('ui.mascot.a11yLabel')}>
       {poke ? (
         <Pressable onPress={onPoke} style={styles.fill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {art}

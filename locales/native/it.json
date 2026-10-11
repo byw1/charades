@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charades usa la fotocamera per scansionare i codici dei mazzi e scattare foto per le tue carte. Nulla lascia il telefono, a meno che tu non lo condivida.",
+    "NSMotionUsageDescription": "Charades usa il movimento per i comandi a inclinazione: inclina il telefono in basso se indovini, in alto per passare. Non viene registrato nulla.",
+    "NSPhotoLibraryUsageDescription": "Charades ti permette di scegliere foto per le tue carte. Restano sul tuo telefono, nei tuoi mazzi."
+  }
+}

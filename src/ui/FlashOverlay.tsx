@@ -4,6 +4,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { Outcome } from '@/game/types';
 import { fitCardText } from './fitText';
 import { color, font } from './tokens';
+import { t, type MessageKey } from '@/i18n';
 
 export type FlashOverlayProps = {
   outcome: Outcome;
@@ -11,10 +12,11 @@ export type FlashOverlayProps = {
   busted?: string;
 };
 
+/** Catalog keys, translated when shown. */
 const LINES = {
-  correct: ['Got it', 'Yesss', 'Nailed it', 'Easy', 'Big brain'],
-  pass: ['Pass', 'Next', 'Skip'],
-} as const;
+  correct: ['ui.flash.correct.gotIt', 'ui.flash.correct.yesss', 'ui.flash.correct.nailedIt', 'ui.flash.correct.easy', 'ui.flash.correct.bigBrain'],
+  pass: ['ui.flash.pass.pass', 'ui.flash.pass.next', 'ui.flash.pass.skip'],
+} as const satisfies Record<string, readonly MessageKey[]>;
 
 /**
  * The full-screen state flash.
@@ -39,7 +41,7 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
   // Upright the screen is a third as wide, and "Nailed it" at full size ran
   // off both edges. The word is fitted to the width it actually has.
   const { width, height } = useWindowDimensions();
-  const label = busted ? 'Busted!' : line;
+  const label = busted ? t('ui.flash.busted') : t(line);
   const fit = fitCardText(label, width - FLASH_PAD * 2, height * 0.5, { maxSize: 120, minSize: 40, maxLines: 2, lineHeight: 1.03 });
 
   const correct = outcome === 'correct';
@@ -50,7 +52,7 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
       style={[styles.overlay, { backgroundColor: background }]}
       pointerEvents="none"
       accessibilityLiveRegion="assertive"
-      accessibilityLabel={correct ? 'Got it' : busted ? `Busted: ${busted}` : 'Pass'}
+      accessibilityLabel={correct ? t('ui.flash.correctA11y') : busted ? t('ui.flash.bustedA11y', { word: busted }) : t('ui.flash.passA11y')}
     >
       <Animated.View
         style={{
@@ -74,7 +76,7 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
         </Text>
         {busted ? (
           <Text style={styles.said} allowFontScaling={false} numberOfLines={2} adjustsFontSizeToFit>
-            Someone said “{busted}”
+            {t('ui.flash.someoneSaid', { word: busted })}
           </Text>
         ) : null}
       </Animated.View>

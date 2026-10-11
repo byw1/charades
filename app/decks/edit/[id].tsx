@@ -15,6 +15,7 @@ import { CARD_TEXT_SOFT_CAP, DEFAULT_DECK_EMOJI, MIN_PLAYABLE_CARDS, type Deck, 
 import { useDatabase } from '@/hooks/useDatabase';
 import { useDeckEditor } from '@/hooks/useDeckEditor';
 import { useHaptics } from '@/hooks/useHaptics';
+import { t } from '@/i18n';
 import { pickPhotos, takePhoto } from '@/media/photos';
 import { getDeck, upsertDeck } from '@/storage/deckRepo';
 import { fitCardText } from '@/ui/fitText';
@@ -70,7 +71,7 @@ export default function DeckEditorScreen() {
     return (
       <Screen>
         <TopBar leading="close" onLeading={router.back} />
-        <EmptyState title="That deck is gone" body="It may have been deleted." mood="sad" />
+        <EmptyState title={t('decks.gone.title')} body={t('decks.gone.body')} mood="sad" />
       </Screen>
     );
   }
@@ -124,8 +125,8 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
       editor.addPhotoCards(photos);
       haptics.correct();
       Alert.alert(
-        photos.length === 1 ? 'Photo added' : `${photos.length} photos added`,
-        'Give each one a name: that’s what the room has to get the guesser to say.',
+        t('editor.photosAdded.title', { count: photos.length }),
+        t('editor.photosAdded.body'),
       );
     });
 
@@ -136,13 +137,13 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
         if (image) editor.updateCard(cardId, { image });
       });
 
-    Alert.alert(hasPhoto ? 'Card photo' : 'Add a photo', undefined, [
-      { text: 'Choose from library', onPress: () => set('library') },
-      { text: 'Take a photo', onPress: () => set('camera') },
+    Alert.alert(hasPhoto ? t('editor.photoMenu.titleChange') : t('editor.photoMenu.titleAdd'), undefined, [
+      { text: t('editor.photoMenu.library'), onPress: () => set('library') },
+      { text: t('editor.photoMenu.camera'), onPress: () => set('camera') },
       ...(hasPhoto
-        ? [{ text: 'Remove photo', style: 'destructive' as const, onPress: () => editor.updateCard(cardId, { image: null }) }]
+        ? [{ text: t('editor.photoMenu.remove'), style: 'destructive' as const, onPress: () => editor.updateCard(cardId, { image: null }) }]
         : []),
-      { text: 'Cancel', style: 'cancel' as const },
+      { text: t('common.cancel'), style: 'cancel' as const },
     ]);
   };
 
@@ -174,9 +175,9 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
       return;
     }
 
-    Alert.alert('Leave without saving?', 'Your changes to this deck will be lost.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
+    Alert.alert(t('editor.leave.title'), t('editor.leave.body'), [
+      { text: t('editor.leave.keepEditing'), style: 'cancel' },
+      { text: t('editor.leave.discard'), style: 'destructive', onPress: () => router.back() },
     ]);
   };
 
@@ -196,32 +197,32 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
     haptics.correct();
 
     const notes: string[] = [];
-    if (result.cards.length) notes.push(`Added ${result.cards.length}.`);
-    if (result.duplicates.length) notes.push(`Skipped ${result.duplicates.length} already here.`);
+    if (result.cards.length) notes.push(t('editor.paste.added', { count: result.cards.length }));
+    if (result.duplicates.length) notes.push(t('editor.paste.skipped', { count: result.duplicates.length }));
     if (result.overLength.length) {
-      notes.push(`${result.overLength.length} over ${CARD_TEXT_SOFT_CAP} characters — they’ll be small on the card.`);
+      notes.push(t('editor.paste.overLength', { count: result.overLength.length, max: CARD_TEXT_SOFT_CAP }));
     }
 
-    if (notes.length) Alert.alert('Pasted', notes.join(' '));
+    if (notes.length) Alert.alert(t('editor.paste.resultTitle'), notes.join(' '));
   };
 
   if (pasting) {
     return (
       <Screen>
-        <TopBar leading="close" onLeading={() => setPasting(false)} title="Paste a list" />
+        <TopBar leading="close" onLeading={() => setPasting(false)} title={t('editor.paste.title')} />
         <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.pasteBody}>
             <Text variant="body" tone="muted">
-              One card per line. Add a hint for clue-givers after a pipe:{' '}
+              {t('editor.paste.intro')}{' '}
               <Text variant="label" tone="default">
-                Card text | hint
+                {t('editor.paste.format')}
               </Text>
             </Text>
             <Field
               value={pasteText}
               onChangeText={setPasteText}
-              placeholder={'My Chemical Romance\nFall Out Boy | They sang Sugar\nParamore'}
-              accessibilityLabel="Cards, one per line"
+              placeholder={t('editor.paste.placeholder')}
+              accessibilityLabel={t('editor.paste.label')}
               multiline
               autoFocus
               autoCapitalize="sentences"
@@ -230,7 +231,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
             />
           </View>
           <Footer>
-            <Button label="Add them" variant="primary" size="lg" icon="plus" disabled={!pasteText.trim()} onPress={applyPaste} />
+            <Button label={t('editor.paste.addThem')} variant="primary" size="lg" icon="plus" disabled={!pasteText.trim()} onPress={applyPaste} />
           </Footer>
         </KeyboardAvoidingView>
       </Screen>
@@ -244,11 +245,11 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
   // smaller rather than cut off. Sideways the screen's content is held to a
   // readable column, so that is the width to fit.
   const bannerWidth = Math.min(width, READABLE_WIDTH) - gutter * 2 - space.lg * 2 - 68 - space.md;
-  const nameFit = fitCardText(draft.name.trim() || 'Your deck', bannerWidth, 84, { maxSize: 32, minSize: 16, maxLines: 3 });
+  const nameFit = fitCardText(draft.name.trim() || t('editor.untitled'), bannerWidth, 84, { maxSize: 32, minSize: 16, maxLines: 3 });
 
   return (
     <Screen>
-      <TopBar leading="close" onLeading={leave} leadingLabel="Close editor" title={isNew ? 'New deck' : 'Edit deck'} />
+      <TopBar leading="close" onLeading={leave} leadingLabel={t('editor.closeEditor')} title={isNew ? t('editor.newDeck') : t('editor.editDeck')} />
 
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
@@ -270,7 +271,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                 <Pressable
                   onPress={() => setPickingEmoji(true)}
                   accessibilityRole="button"
-                  accessibilityLabel="Change the cover emoji"
+                  accessibilityLabel={t('editor.changeEmojiLabel')}
                   style={styles.previewSticker}
                 >
                   <EmojiSticker emoji={draft.emoji ?? DEFAULT_DECK_EMOJI} size={64} />
@@ -290,7 +291,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                     {nameFit.lines.join('\n')}
                   </Text>
                   <Text variant="label" style={{ color: onAccent, opacity: 0.9 }}>
-                    {count} {count === 1 ? 'card' : 'cards'}
+                    {t('decks.cardCount', { count })}
                   </Text>
                 </View>
               </View>
@@ -299,16 +300,16 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                 <Field
                   value={draft.name}
                   onChangeText={editor.setName}
-                  placeholder="Deck name"
-                  accessibilityLabel="Deck name"
+                  placeholder={t('editor.deckNamePlaceholder')}
+                  accessibilityLabel={t('editor.deckNameLabel')}
                   size="heading"
                   maxLength={60}
                 />
                 <Field
                   value={draft.description}
                   onChangeText={editor.setDescription}
-                  placeholder="What’s in it? (optional)"
-                  accessibilityLabel="Deck description"
+                  placeholder={t('editor.descriptionPlaceholder')}
+                  accessibilityLabel={t('editor.descriptionLabel')}
                   maxLength={280}
                 />
               </View>
@@ -325,7 +326,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                         }}
                         accessibilityRole="radio"
                         accessibilityState={{ selected }}
-                        accessibilityLabel={`Deck colour ${accent}`}
+                        accessibilityLabel={t('editor.colourLabel', { colour: accent })}
                         style={[styles.swatchRing, selected && { borderColor: accent }]}
                       >
                         <View style={[styles.swatch, { backgroundColor: accent }]}>
@@ -340,16 +341,16 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
               <Tap
                 onPress={() => setPickingEmoji(true)}
                 squish={0.98}
-                accessibilityLabel="Cover emoji. Type one or search."
+                accessibilityLabel={t('editor.emojiButtonLabel')}
                 contentStyle={styles.emojiButton}
               >
                 <Text style={styles.emojiGlyph} allowFontScaling={false}>
                   {draft.emoji ?? DEFAULT_DECK_EMOJI}
                 </Text>
                 <View style={styles.grow}>
-                  <Text variant="heading">Cover emoji</Text>
+                  <Text variant="heading">{t('editor.coverEmoji')}</Text>
                   <Text variant="caption" tone="muted">
-                    Type any emoji, or search for one
+                    {t('editor.coverEmojiHint')}
                   </Text>
                 </View>
                 <Icon name="forward" size={18} color={color.textFaint} weight={3} />
@@ -358,10 +359,10 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
               <View style={styles.progress}>
                 <View style={styles.progressText}>
                   <Text variant="heading">
-                    {count} {count === 1 ? 'card' : 'cards'}
+                    {t('decks.cardCount', { count })}
                   </Text>
                   <Text variant="label" tone={needed > 0 ? 'pass' : 'correct'}>
-                    {needed > 0 ? `${needed} more to play` : 'Ready to play!'}
+                    {needed > 0 ? t('editor.moreToPlay', { count: needed }) : t('editor.readyToPlay')}
                   </Text>
                 </View>
                 <View style={styles.progressBar}>
@@ -374,8 +375,8 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                   value={newCard}
                   onChangeText={setNewCard}
                   onSubmitEditing={commitNewCard}
-                  placeholder="Type a card and hit return"
-                  accessibilityLabel="New card text"
+                  placeholder={t('editor.newCardPlaceholder')}
+                  accessibilityLabel={t('editor.newCardLabel')}
                   style={styles.grow}
                   returnKeyType="done"
                   submitBehavior="submit"
@@ -383,7 +384,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                 <Tap
                   onPress={commitNewCard}
                   disabled={!newCard.trim()}
-                  accessibilityLabel="Add card"
+                  accessibilityLabel={t('editor.addCard')}
                   contentStyle={[styles.addButton, { backgroundColor: newCard.trim() ? color.brand : color.surface }]}
                 >
                   <Icon name="plus" size={26} color={newCard.trim() ? color.ink : color.textFaint} weight={3.5} />
@@ -391,9 +392,9 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
               </View>
 
               <View style={styles.bulkRow}>
-                <Button label="Paste a list" icon="paste" size="sm" onPress={() => setPasting(true)} style={styles.grow} />
+                <Button label={t('editor.paste.title')} icon="paste" size="sm" onPress={() => setPasting(true)} style={styles.grow} />
                 <Button
-                  label={busyPhoto ? 'Adding…' : 'Photo cards'}
+                  label={busyPhoto ? t('editor.adding') : t('editor.photoCards')}
                   icon="camera"
                   size="sm"
                   disabled={busyPhoto}
@@ -404,7 +405,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
 
               {count > 0 ? (
                 <Text variant="overline" tone="faint">
-                  CARDS
+                  {t('editor.cardsHeader')}
                 </Text>
               ) : null}
             </View>
@@ -419,7 +420,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                   <Pressable
                     onPress={() => photoFor(item.id, true)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Photo on card ${index + 1}. Change or remove it.`}
+                    accessibilityLabel={t('editor.card.photoLabel', { index: index + 1 })}
                   >
                     <Image source={{ uri: item.image }} style={styles.thumb} />
                   </Pressable>
@@ -428,28 +429,28 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                   <Field
                     value={item.text}
                     onChangeText={(text) => editor.updateCard(item.id, { text })}
-                    accessibilityLabel={`Card ${index + 1}`}
+                    accessibilityLabel={t('editor.card.label', { index: index + 1 })}
                     multiline
                     style={styles.cardInput}
                   />
                   {tooLong ? (
                     <Text variant="caption" tone="pass">
-                      {item.text.length} characters — small at arm’s length
+                      {t('editor.card.tooLong', { count: item.text.length })}
                     </Text>
                   ) : null}
                   {showTaboo ? (
                     <TabooField
                       initial={item.taboo ?? []}
                       onChange={(taboo) => editor.updateCard(item.id, { taboo })}
-                      label={`Banned words for card ${index + 1}`}
+                      label={t('editor.card.tabooLabel', { index: index + 1 })}
                     />
                   ) : null}
                   <View style={styles.extras}>
                     {item.image ? null : (
-                      <Extra label="+ Photo" hint={`Add a photo to card ${index + 1}`} onPress={() => photoFor(item.id, false)} />
+                      <Extra label={t('editor.card.addPhoto')} hint={t('editor.card.addPhotoHint', { index: index + 1 })} onPress={() => photoFor(item.id, false)} />
                     )}
                     {showTaboo ? null : (
-                      <Extra label="+ Banned words" hint={`Add banned words to card ${index + 1}`} onPress={() => toggleTaboo(item.id)} />
+                      <Extra label={t('editor.card.addTaboo')} hint={t('editor.card.addTabooHint', { index: index + 1 })} onPress={() => toggleTaboo(item.id)} />
                     )}
                   </View>
                 </View>
@@ -457,17 +458,17 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
                 <View style={styles.cardActions}>
                   <SmallIcon
                     icon="up"
-                    hint={`Move card ${index + 1} up`}
+                    hint={t('editor.card.moveUp', { index: index + 1 })}
                     disabled={index === 0}
                     onPress={() => editor.moveUp(item.id)}
                   />
                   <SmallIcon
                     icon="down"
-                    hint={`Move card ${index + 1} down`}
+                    hint={t('editor.card.moveDown', { index: index + 1 })}
                     disabled={index === count - 1}
                     onPress={() => editor.moveDown(item.id)}
                   />
-                  <SmallIcon icon="trash" hint={`Delete card ${index + 1}`} danger onPress={() => editor.removeCard(item.id)} />
+                  <SmallIcon icon="trash" hint={t('editor.card.delete', { index: index + 1 })} danger onPress={() => editor.removeCard(item.id)} />
                 </View>
               </View>
             );
@@ -492,7 +493,7 @@ function Editor({ initial, isNew }: { initial: Deck; isNew: boolean }) {
             </Text>
           ) : null}
           <Button
-            label={saving ? 'Saving…' : 'Save deck'}
+            label={saving ? t('editor.saving') : t('editor.saveDeck')}
             variant="primary"
             size="lg"
             icon="check"
@@ -515,7 +516,7 @@ function TabooField({ initial, onChange, label }: { initial: readonly string[]; 
         setText(next);
         onChange(parseTabooInput(next));
       }}
-      placeholder="🚫 Words the room can’t say, separated by commas"
+      placeholder={t('editor.card.tabooPlaceholder')}
       accessibilityLabel={label}
       autoCapitalize="none"
       autoCorrect={false}

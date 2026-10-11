@@ -1,7 +1,9 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { removeLeftovers } from '@/media/leftovers';
+import { t } from '@/i18n';
 import { openDatabase } from '@/storage/database';
+import { MigrationError } from '@/storage/migrations';
 import { seedBundledDecks } from '@/storage/seed';
 
 /**
@@ -65,10 +67,7 @@ export function useDatabase(): DatabaseState {
         if (cancelled) return;
         setState({
           status: 'error',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Charades could not open your decks. Restarting the app usually fixes it.',
+          message: startupErrorMessage(error),
         });
       }
     })();
@@ -79,4 +78,16 @@ export function useDatabase(): DatabaseState {
   }, []);
 
   return state;
+}
+
+/** The startup failure in words for the screen, in the phone's language. */
+function startupErrorMessage(error: unknown): string {
+  if (error instanceof MigrationError) {
+    const { failure } = error;
+    if (failure.kind === 'tooNew') return t('ui.database.tooNew', { current: failure.current, latest: failure.latest });
+    if (failure.kind === 'stepFailed') return t('ui.database.migrationFailed', { step: failure.step, name: failure.name });
+  }
+  // Anything else is a raw system error with no translation; it is still
+  // more useful to whoever reports it than a generic line.
+  return error instanceof Error ? error.message : t('ui.database.openFailed');
 }

@@ -9,6 +9,7 @@ import { deckFileName, deckLink, measure, QR_ERROR_CORRECTION, type ShareSize } 
 import type { StoredDeck } from '@/decks/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useHaptics } from '@/hooks/useHaptics';
+import { t } from '@/i18n';
 import { getDeck } from '@/storage/deckRepo';
 import { Loader } from '@/ui/Loader';
 import { Button } from '@/ui/Button';
@@ -58,13 +59,13 @@ export default function ShareDeckScreen() {
 
   const size: ShareSize | null = useMemo(() => (deck ? measure(deck) : null), [deck]);
 
-  const top = <TopBar leading="close" onLeading={router.back} title="Share deck" />;
+  const top = <TopBar leading="close" onLeading={router.back} title={t('decks.share.title')} />;
 
   if (missing) {
     return (
       <Screen>
         {top}
-        <EmptyState title="That deck is gone" body="It may have been deleted." mood="sad" />
+        <EmptyState title={t('decks.gone.title')} body={t('decks.gone.body')} mood="sad" />
       </Screen>
     );
   }
@@ -94,7 +95,7 @@ export default function ShareDeckScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/x-charades',
-          dialogTitle: `Share ${deck.name}`,
+          dialogTitle: t('decks.share.dialogTitle', { name: deck.name }),
           UTI: 'com.charades.deck',
         });
       }
@@ -123,13 +124,13 @@ export default function ShareDeckScreen() {
           <ChatLine style={styles.grow}>
             <Text variant="heading">
               {size.fitsQr
-                ? 'Point a friend’s camera at this.'
+                ? t('decks.share.headlineQr')
                 : size.qrParts
-                  ? 'Big deck! Hold their camera on this till it’s got every code.'
-                  : 'Too big for a code. Send it as a file.'}
+                  ? t('decks.share.headlineParts')
+                  : t('decks.share.headlineTooBig')}
             </Text>
             <Text variant="caption" tone="muted">
-              {deck.name} · {deck.cards.length} {deck.cards.length === 1 ? 'card' : 'cards'}
+              {t('decks.share.subtitle', { name: deck.name, count: deck.cards.length })}
             </Text>
           </ChatLine>
         </View>
@@ -154,37 +155,35 @@ export default function ShareDeckScreen() {
           </PopIn>
         ) : (
           <Text variant="body" tone="muted" style={styles.pad}>
-            This deck has {deck.cards.length} cards, which is more than a few codes can hold. A file works
-            exactly the same at the other end.
+            {t('decks.share.tooBigBody', { count: deck.cards.length })}
           </Text>
         )}
 
         {size.photos > 0 ? (
           <Text variant="caption" tone="muted" align="center" style={styles.pad}>
-            📷 {size.photos} {size.photos === 1 ? 'photo' : 'photos'} only travel in the file. Codes and links carry
-            the words.
+            {t('decks.share.photosNote', { count: size.photos })}
           </Text>
         ) : null}
 
         <View style={styles.actions}>
           <Button
-            label={busy ? 'Preparing' : 'Send as a file'}
+            label={busy ? t('decks.share.preparing') : t('decks.share.sendFile')}
             variant={size.fitsQr ? 'blue' : 'primary'}
             icon="share"
             disabled={busy}
             onPress={() => void shareFile()}
-            accessibilityHint="Opens the share sheet with a .charades file"
+            accessibilityHint={t('decks.share.sendFileHint')}
           />
           <Button
-            label={copied ? 'Copied ✓' : 'Copy link'}
+            label={copied ? t('decks.share.copied') : t('decks.share.copyLink')}
             icon={copied ? 'check' : 'link'}
             onPress={() => void copyLink()}
-            accessibilityHint="Copies a link that opens this deck in Charades"
+            accessibilityHint={t('decks.share.copyLinkHint')}
           />
         </View>
 
         <Text variant="caption" tone="faint" align="center" style={styles.pad}>
-          The whole deck travels inside the code, link or file. Nothing is uploaded anywhere.
+          {t('decks.share.footer')}
         </Text>
       </ScrollView>
     </Screen>
@@ -214,7 +213,10 @@ function QrFlipbook({ parts, size }: { parts: string[]; size: number }) {
       <Pressable
         onPress={() => setPaused((p) => !p)}
         accessibilityRole="button"
-        accessibilityLabel={`Code ${index + 1} of ${parts.length}. ${paused ? 'Paused. Tap to carry on.' : 'Tap to pause.'}`}
+        accessibilityLabel={t(paused ? 'decks.share.flipbook.a11yPaused' : 'decks.share.flipbook.a11yPlaying', {
+          index: index + 1,
+          total: parts.length,
+        })}
         style={styles.qrFrame}
       >
         <QRCode value={parts[index]!} size={size} ecl={QR_ERROR_CORRECTION} backgroundColor={color.bone} color={color.ink} />
@@ -225,8 +227,10 @@ function QrFlipbook({ parts, size }: { parts: string[]; size: number }) {
         ))}
       </View>
       <Text variant="caption" tone="muted" align="center">
-        Code {index + 1} of {parts.length}
-        {paused ? ' · paused, tap to carry on' : ' · tap to pause'}
+        {t(paused ? 'decks.share.flipbook.captionPaused' : 'decks.share.flipbook.caption', {
+          index: index + 1,
+          total: parts.length,
+        })}
       </Text>
     </View>
   );

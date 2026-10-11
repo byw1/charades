@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { makeJustPlayTeam, makeTeams, normalisePlayerNames } from '@/game/teams';
+import { defaultTeamName } from '@/i18n/gameText';
 import { clampHatSize, defaultSettings, type GameMode, type SessionSettings, type Team, type WinCondition } from '@/game/types';
 
 /**
@@ -41,6 +42,11 @@ export type NewGameStore = {
   reset(): void;
 };
 
+/** Fresh teams with default names in the phone's language. Once created, a name is the players' to edit. */
+function localisedTeams(count: number): Team[] {
+  return makeTeams(count).map((team, i) => ({ ...team, name: defaultTeamName(i) }));
+}
+
 const initial = {
   deckIds: [] as string[],
   mode: 'justPlay' as TeamMode,
@@ -66,7 +72,7 @@ export const useNewGameStore = create<NewGameStore>((set, get) => ({
 
   setTeamCount(count) {
     set((s) => {
-      const next = makeTeams(count);
+      const next = localisedTeams(count);
       // Keep names and players already typed for teams that still exist.
       return {
         teams: next.map((team, i) => {
@@ -142,6 +148,6 @@ export const useNewGameStore = create<NewGameStore>((set, get) => ({
   },
 
   reset() {
-    set({ ...initial, teams: makeTeams(2) });
+    set({ ...initial, teams: localisedTeams(2) });
   },
 }));

@@ -142,10 +142,22 @@ export function seenCardKey(deckId: string, cardId: string): string {
 
 export const LATEST_SCHEMA_VERSION = migrations.length;
 
+/**
+ * What went wrong, with the numbers, so the screen can say it in the phone's
+ * language. The English `message` stays for logs and tests.
+ */
+export type MigrationFailure =
+  | { kind: 'tooNew'; current: number; latest: number }
+  | { kind: 'stepFailed'; step: number; name: string }
+  | { kind: 'malformed' };
+
 export class MigrationError extends Error {
-  constructor(message: string, cause?: unknown) {
+  readonly failure: MigrationFailure;
+
+  constructor(message: string, failure: MigrationFailure, cause?: unknown) {
     super(message, { cause });
     this.name = 'MigrationError';
+    this.failure = failure;
   }
 }
 
@@ -166,7 +178,8 @@ export async function migrate(db: MigrationDriver): Promise<number[]> {
     // shape this build cannot read. Failing loudly beats writing to it and
     // corrupting decks the newer build could still have opened.
     throw new MigrationError(
-      `This app is older than the data on this device (data version ${current}, app reads up to ${LATEST_SCHEMA_VERSION}). Update Deckhead to open your decks.`,
+      `This app is older than the data on this device (data version ${current}, app reads up to ${LATEST_SCHEMA_VERSION}). Update Charades to open your decks.`,
+      { kind: 'tooNew', current, latest: LATEST_SCHEMA_VERSION },
     );
   }
 
@@ -192,6 +205,7 @@ COMMIT;`);
       }
       throw new MigrationError(
         `Could not update the deck database (step ${migration.version}, ${migration.name}).`,
+        { kind: 'stepFailed', step: migration.version, name: migration.name },
         error,
       );
     }
@@ -208,6 +222,7 @@ function assertMigrationsWellFormed(): void {
     if (migration.version !== index + 1) {
       throw new MigrationError(
         `Migration list is malformed: entry ${index} declares version ${migration.version}, expected ${index + 1}.`,
+        { kind: 'malformed' },
       );
     }
   });
