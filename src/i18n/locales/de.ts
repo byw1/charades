@@ -155,7 +155,7 @@ export const de: Messages = {
         caption: 'Deine Freunde rufen Hinweise',
         detail: 'Vorspielen, summen, umschreiben. Nur nicht aussprechen.',
         stickerBarks: 'macht wuff!!',
-        stickerFetch: 'HOL DAS STÖCKCHEN',
+        stickerFetch: 'HOL’S!',
         stickerGoodBoy: 'guter Junge 🐶',
       },
     },
@@ -755,7 +755,7 @@ export const de: Messages = {
         choose: 'Fotos wählen',
       },
       nameStep: {
-        title: '🎉 Gib ihm einen Namen',
+        title: '🎉 Benenn es',
         subtitle: 'Wähl einen Namen und eine Farbe.',
         nameLabel: 'Deckname',
         colourLabel: 'Deckfarbe {colour}',
