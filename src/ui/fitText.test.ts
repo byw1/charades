@@ -1,6 +1,6 @@
 import { bundledDeckDocuments } from '@/decks/bundled';
 import { isEmojiCard } from '@/decks/types';
-import { fitCardText, measureCard, wrap } from './fitText';
+import { CARD_LETTER_SPACING, fitCardText, measureCard, wrap } from './fitText';
 
 /** An iPhone 15 in landscape, less the card's padding and timer bar. */
 const W = 852 - 96;
@@ -31,6 +31,12 @@ describe('measureCard', () => {
 
   it('gives an unknown glyph a generous width rather than zero', () => {
     expect(measureCard('Ж')).toBeGreaterThan(0.5);
+  });
+
+  it('measures Chinese, Japanese and Korean as a full em each', () => {
+    for (const text of ['時間', 'じかん', 'カード', '시간', '！']) {
+      expect(measureCard(text)).toBeCloseTo([...text].length + CARD_LETTER_SPACING * ([...text].length - 1));
+    }
   });
 
   it('treats an emoji as roughly square', () => {
