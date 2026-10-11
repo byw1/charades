@@ -54,11 +54,18 @@ export function Button({
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       style={style}
-      contentStyle={[styles.face, { minHeight: heights[size], backgroundColor: face }]}
+      contentStyle={[styles.face, size === 'sm' && styles.faceSmall, { minHeight: heights[size], backgroundColor: face }]}
     >
       <View style={styles.content}>
         {icon ? <Icon name={icon} size={size === 'sm' ? 18 : 20} color={text} weight={2.75} /> : null}
-        <Text style={[styles.label, size === 'lg' && styles.labelLarge, { color: text }]} numberOfLines={1}>
+        {/* Two buttons share a row upright, and at a large text size a label
+            like "Change decks" was cut to "Change de…". It shrinks instead. */}
+        <Text
+          style={[styles.label, size === 'lg' && styles.labelLarge, { color: text }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           {label}
         </Text>
       </View>
@@ -73,7 +80,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: space.lg,
   },
-  content: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  label: { fontFamily: font.heavy, fontSize: 16, lineHeight: 20 },
+  faceSmall: { paddingHorizontal: space.md },
+  content: { flexDirection: 'row', alignItems: 'center', gap: space.sm, maxWidth: '100%' },
+  label: { fontFamily: font.heavy, fontSize: 16, lineHeight: 20, flexShrink: 1 },
   labelLarge: { fontSize: 18, lineHeight: 22 },
 });

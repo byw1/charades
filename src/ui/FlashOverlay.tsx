@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { Outcome } from '@/game/types';
+import { fitCardText } from './fitText';
 import { color, font } from './tokens';
 
 export type FlashOverlayProps = {
@@ -35,6 +36,12 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
     return () => animation.stop();
   }, [pop, reduced]);
 
+  // Upright the screen is a third as wide, and "Nailed it" at full size ran
+  // off both edges. The word is fitted to the width it actually has.
+  const { width, height } = useWindowDimensions();
+  const label = busted ? 'Busted!' : line;
+  const fit = fitCardText(label, width - FLASH_PAD * 2, height * 0.5, { maxSize: 120, minSize: 40, maxLines: 2, lineHeight: 1.03 });
+
   const correct = outcome === 'correct';
   const background = correct ? color.correct : busted ? color.danger : color.pass;
 
@@ -57,11 +64,16 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
         <Text style={styles.emoji} allowFontScaling={false}>
           {correct ? '🔥' : busted ? '🚨' : '💨'}
         </Text>
-        <Text style={[styles.label, busted ? { color: color.bone } : null]} allowFontScaling={false}>
-          {busted ? 'Busted!' : line}
+        <Text
+          style={[styles.label, { fontSize: fit.fontSize, lineHeight: fit.lineHeight, letterSpacing: fit.fontSize * -0.025 }, busted ? { color: color.bone } : null]}
+          allowFontScaling={false}
+          numberOfLines={fit.lines.length}
+          adjustsFontSizeToFit
+        >
+          {fit.lines.join('\n')}
         </Text>
         {busted ? (
-          <Text style={styles.said} allowFontScaling={false} numberOfLines={1}>
+          <Text style={styles.said} allowFontScaling={false} numberOfLines={2} adjustsFontSizeToFit>
             Someone said “{busted}”
           </Text>
         ) : null}
@@ -70,6 +82,9 @@ export function FlashOverlay({ outcome, busted }: FlashOverlayProps) {
   );
 }
 
+/** Room kept clear either side of the word, allowing for its tilt. */
+const FLASH_PAD = 28;
+
 function pick<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)] ?? (items[0] as T);
 }
@@ -77,12 +92,11 @@ function pick<T>(items: readonly T[]): T {
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
   emoji: { fontSize: 64, lineHeight: 76 },
-  said: { fontFamily: font.heavy, fontSize: 26, lineHeight: 32, color: color.bone, textAlign: 'center' },
+  said: { fontFamily: font.heavy, fontSize: 26, lineHeight: 32, color: color.bone, textAlign: 'center', paddingHorizontal: FLASH_PAD },
   label: {
     fontFamily: font.display,
     fontSize: 120,
     lineHeight: 124,
-    letterSpacing: -3,
     color: color.ink,
     textAlign: 'center',
   },

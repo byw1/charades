@@ -162,7 +162,14 @@ export default function DeckDetailScreen() {
                 {deck.emoji ?? DEFAULT_DECK_EMOJI}
               </Text>
               <EmojiSticker emoji={deck.emoji ?? DEFAULT_DECK_EMOJI} size={short ? 56 : 76} tilt={-8} />
-              <Text style={[styles.title, short && styles.titleShort, { color: onAccent }]} numberOfLines={3} accessibilityRole="header">
+              <Text
+                style={[styles.title, short && styles.titleShort, { color: onAccent }]}
+                numberOfLines={3}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                maxFontSizeMultiplier={1.2}
+                accessibilityRole="header"
+              >
                 {deck.name}
               </Text>
               {deck.description ? (

@@ -141,7 +141,7 @@ export default function WelcomeScreen() {
 
       <SafeAreaView style={styles.safe} pointerEvents="box-none">
         <View style={styles.top} pointerEvents="box-none">
-          <StoryBar count={stories.length} index={index} progress={progress} />
+          <StoryBar count={stories.length} index={index} progress={progress} tone="onColour" />
           <View style={styles.topRow} pointerEvents="box-none">
             <View style={styles.from}>
               <Mascot size={32} animated={false} />

@@ -27,6 +27,10 @@ const FALLBACK_GLYPH = 0.7;
 /** Emoji draw roughly square. */
 const EMOJI_GLYPH = 1.15;
 
+/** Chinese, Japanese and Korean draw a full em wide, well past the fallback. */
+const WIDE_GLYPH = 1.0;
+const WIDE = /[\p{Script=Han}\u3040-\u30FF\p{Script=Hangul}\u3000-\u303F\uFF01-\uFF60]/u;
+
 const EMOJI = /\p{Extended_Pictographic}/u;
 /**
  * Parts of an emoji that draw nothing on their own: the joiner in 🧙‍♂️, the
@@ -51,7 +55,7 @@ export function measureCard(text: string): number {
       joined = false;
       continue;
     }
-    width += CARD_GLYPH_WIDTHS[glyph] ?? (EMOJI.test(glyph) ? EMOJI_GLYPH : FALLBACK_GLYPH);
+    width += CARD_GLYPH_WIDTHS[glyph] ?? (EMOJI.test(glyph) ? EMOJI_GLYPH : WIDE.test(glyph) ? WIDE_GLYPH : FALLBACK_GLYPH);
     drawn += 1;
   }
   return width + CARD_LETTER_SPACING * Math.max(0, drawn - 1);

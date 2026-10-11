@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { forfeitFor } from '@/game/forfeits';
 import { makeSessionId } from '@/game/ids';
 import { playerStandings, standings } from '@/game/scoring';
@@ -17,7 +18,8 @@ import { discardOtherUnfinishedSessions, saveSession } from '@/storage/sessionRe
 import { Button } from '@/ui/Button';
 import { Confetti } from '@/ui/Confetti';
 import { EmptyState } from '@/ui/EmptyState';
-import { useLayout } from '@/ui/layout';
+import { fitCardText } from '@/ui/fitText';
+import { READABLE_WIDTH, useLayout } from '@/ui/layout';
 import { Mascot } from '@/ui/Mascot';
 import { PopIn } from '@/ui/motion';
 import { Footer, Screen } from '@/ui/Screen';
@@ -51,7 +53,8 @@ export default function StandingsScreen() {
   const [busy, setBusy] = useState(false);
 
   useRoundScreenMode();
-  const { short } = useLayout();
+  const { short, landscape, width } = useLayout();
+  const insets = useSafeAreaInsets();
   const setRoundSeconds = useSessionStore((st) => st.setRoundSeconds);
 
   const winState = useMemo(
@@ -154,16 +157,36 @@ export default function StandingsScreen() {
       ? `${turn.playerName}, you’re up next.`
       : `${played} ${played === 1 ? 'round' : 'rounds'} down. Keep it going.`;
 
+  // The headline sits beside the mascot, and upright that leaves it barely
+  // half the screen: a winning team's name at the hero size broke mid-word.
+  // It is fitted to the room it has, and the mascot gives a little back.
+  const mascotSize = winState.over ? (landscape ? 120 : 96) : 84;
+  const column = Math.min(width - insets.left - insets.right, READABLE_WIDTH);
+  const headlineFit = fitCardText(headline, column - gutter * 2 - mascotSize - space.md, 160, {
+    maxSize: 44,
+    minSize: 24,
+    maxLines: 3,
+    lineHeight: 1.05,
+  });
+
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.header}>
           <PopIn style={styles.sticker}>
-            <Mascot size={winState.over ? 120 : 84} mood={winState.over ? 'excited' : 'happy'} glyph={winState.over ? '★' : '?'} poke />
+            <Mascot size={mascotSize} mood={winState.over ? 'excited' : 'happy'} glyph={winState.over ? '★' : '?'} poke />
           </PopIn>
           <PopIn delay={80} style={styles.headerCopy}>
-            <Text variant="hero" accessibilityRole="header">
-              {headline}
+            <Text
+              variant="hero"
+              accessibilityRole="header"
+              accessibilityLabel={headline}
+              allowFontScaling={false}
+              numberOfLines={headlineFit.lines.length}
+              adjustsFontSizeToFit
+              style={{ fontSize: headlineFit.fontSize, lineHeight: headlineFit.lineHeight }}
+            >
+              {headlineFit.lines.join('\n')}
             </Text>
             <ChatLine>{bubble}</ChatLine>
           </PopIn>
