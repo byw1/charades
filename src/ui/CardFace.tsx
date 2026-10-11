@@ -25,6 +25,7 @@ const PAD = {
   upright: { x: 22, y: 96 },
 } as const;
 const GAP = 24;
+const UPRIGHT_MAX_LINES = 5;
 
 /**
  * The card. Not a card-shaped thing on a screen — the whole screen.
@@ -59,7 +60,10 @@ export function CardFace({ text, accentColor, note, taboo, image }: CardFaceProp
   const textW = image && !upright ? innerW - photo - GAP : innerW;
   const roomH = image && upright ? innerH - photo - GAP : innerH;
   const textH = forbidden ? roomH * 0.5 : answer ? roomH * 0.66 : roomH;
-  const fit = fitCardText(text, textW, textH, image ? { maxSize: 120 } : undefined);
+  // Upright, width is what runs out and height is plentiful, so a title can
+  // stack onto more lines and stay bigger than three wide ones would allow.
+  const maxLines = upright ? UPRIGHT_MAX_LINES : undefined;
+  const fit = fitCardText(text, textW, textH, { ...(image ? { maxSize: 120 } : null), ...(maxLines ? { maxLines } : null) });
   const answerFit = answer ? fitCardText(answer, textW, innerH * 0.24, { maxSize: 48, minSize: 20, maxLines: 2 }) : null;
 
   return (

@@ -18,6 +18,7 @@ import { Button } from '@/ui/Button';
 import { CardFace } from '@/ui/CardFace';
 import { CircleButton } from '@/ui/CircleButton';
 import { cardTextOn } from '@/ui/contrast';
+import { fitCardText } from '@/ui/fitText';
 import { FlashOverlay } from '@/ui/FlashOverlay';
 import { Icon } from '@/ui/Icon';
 import { useLayout } from '@/ui/layout';
@@ -27,6 +28,7 @@ import { TimerBar } from '@/ui/TimerBar';
 import { color, flashMs, font, radius, space } from '@/ui/tokens';
 
 const TICK_MS = 100;
+const TIME_UP_MASCOT = 150;
 
 /**
  * The round.
@@ -54,7 +56,7 @@ export default function RoundPlayScreen() {
   const resetSession = useSessionStore((s) => s.reset);
   // The round plays whichever way the phone is held; only the full-screen
   // moments (paused, time's up) need to know which way that is.
-  const { landscape } = useLayout();
+  const { landscape, width } = useLayout();
   const upright = !landscape;
   // Upright, the room's pills drop below the Dynamic Island.
   const insets = useSafeAreaInsets();
@@ -190,6 +192,15 @@ export default function RoundPlayScreen() {
     router.replace('/');
   };
 
+  // The two full-screen shouts, fitted to the width they get so neither breaks
+  // mid-word or runs off the edge. Upright they sit under the mascot and can
+  // take two lines; sideways they share the row with it.
+  const timeUpLabel = state.cleared ? 'Hat’s empty!' : 'Time’s up!';
+  const timeUpFit = upright
+    ? fitCardText(timeUpLabel, width - space.xl * 2, 240, { maxSize: 96, minSize: 40, maxLines: 2 })
+    : fitCardText(timeUpLabel, width - TIME_UP_MASCOT - space.lg - space.xl * 2, 200, { maxSize: 104, minSize: 40, maxLines: 1 });
+  const pausedFit = upright ? fitCardText('Paused', width - space.xl * 2, 120, { maxSize: 72, minSize: 40, maxLines: 1 }) : null;
+
   if (state.phase === 'paused') {
     return (
       <Pressable
@@ -200,7 +211,15 @@ export default function RoundPlayScreen() {
       >
         <Mascot size={upright ? 130 : 110} mood="sleepy" />
         <View style={[styles.pausedCopy, upright && styles.centred]}>
-          <Text style={[styles.pausedTitle, upright && styles.pausedTitleUpright]} allowFontScaling={false}>
+          <Text
+            style={[
+              styles.pausedTitle,
+              pausedFit && { fontSize: pausedFit.fontSize, lineHeight: pausedFit.lineHeight, textAlign: 'center' },
+            ]}
+            allowFontScaling={false}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
             Paused
           </Text>
           <Text style={[styles.pausedBody, upright && styles.textCentred]}>
@@ -299,11 +318,24 @@ export default function RoundPlayScreen() {
       {state.phase === 'ended' ? (
         <View style={[styles.timeUp, upright && styles.stacked]} pointerEvents="none">
           <PopIn>
-            <Mascot size={150} mood="wow" />
+            <Mascot size={TIME_UP_MASCOT} mood="wow" />
           </PopIn>
           <PopIn delay={80}>
-            <Text style={[styles.timeUpText, upright && styles.timeUpTextUpright]} allowFontScaling={false}>
-              {state.cleared ? 'Hat’s empty!' : 'Time’s up!'}
+            <Text
+              style={[
+                styles.timeUpText,
+                {
+                  fontSize: timeUpFit.fontSize,
+                  lineHeight: timeUpFit.lineHeight,
+                  letterSpacing: timeUpFit.fontSize * -0.03,
+                },
+                upright && styles.textCentred,
+              ]}
+              allowFontScaling={false}
+              numberOfLines={timeUpFit.lines.length}
+              adjustsFontSizeToFit
+            >
+              {timeUpFit.lines.join('\n')}
             </Text>
           </PopIn>
         </View>
@@ -408,13 +440,11 @@ const styles = StyleSheet.create({
   },
   pausedCopy: { gap: space.xs, flexShrink: 1 },
   pausedActions: { flexDirection: 'row', gap: space.sm, paddingTop: space.md },
-  pausedActionsUpright: { justifyContent: 'center' },
+  pausedActionsUpright: { justifyContent: 'center', flexWrap: 'wrap' },
   pauseSpot: { position: 'absolute', top: 6, left: 6, zIndex: 10 },
   stacked: { flexDirection: 'column' },
   centred: { alignItems: 'center' },
   textCentred: { textAlign: 'center' },
-  pausedTitleUpright: { fontSize: 52, lineHeight: 56, textAlign: 'center' },
-  timeUpTextUpright: { fontSize: 64, lineHeight: 68, textAlign: 'center' },
   pausedTitle: {
     fontFamily: font.display,
     fontSize: 64,
@@ -435,6 +465,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.lg,
+    paddingHorizontal: space.xl,
     backgroundColor: color.brand,
     zIndex: 20,
   },

@@ -51,25 +51,32 @@ export type StoryBarProps = {
   index: number;
   /** How far through the current segment, 0 to 1. */
   progress?: number | Animated.Value;
+  /**
+   * `canvas` sits on the menu background and follows the theme. `onColour`
+   * sits on a full-bleed coloured story, where white always reads.
+   */
+  tone?: 'canvas' | 'onColour';
 };
 
 /**
  * Story segments: one thin bar per step, filled up to where you are. Used for
  * setup steps and the how-to-play, so "how much is left" reads at a glance.
  */
-export function StoryBar({ count, index, progress = 1 }: StoryBarProps) {
+export function StoryBar({ count, index, progress = 1, tone = 'canvas' }: StoryBarProps) {
+  const segment = [styles.segment, tone === 'canvas' && styles.segmentCanvas];
+  const filled = [styles.segmentFill, tone === 'canvas' && styles.segmentFillCanvas];
   return (
     <View style={styles.story} accessibilityLabel={`Step ${index + 1} of ${count}`} accessible>
       {Array.from({ length: count }, (_, i) => (
-        <View key={i} style={styles.segment}>
-          {i < index ? <View style={[styles.segmentFill, { width: '100%' }]} /> : null}
+        <View key={i} style={segment}>
+          {i < index ? <View style={[filled, { width: '100%' }]} /> : null}
           {i === index ? (
             typeof progress === 'number' ? (
-              <View style={[styles.segmentFill, { width: `${Math.round(progress * 100)}%` }]} />
+              <View style={[filled, { width: `${Math.round(progress * 100)}%` }]} />
             ) : (
               <Animated.View
                 style={[
-                  styles.segmentFill,
+                  ...filled,
                   { width: progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
                 ]}
               />
@@ -93,4 +100,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   segmentFill: { height: '100%', backgroundColor: color.bone, borderRadius: 2 },
+  // On the light canvas white-on-white vanished, so the menu bar takes the
+  // theme's text colour on a tinted track instead.
+  segmentCanvas: { backgroundColor: color.glassStrong },
+  segmentFillCanvas: { backgroundColor: color.text },
 });

@@ -13,6 +13,7 @@ import { useSessionStore } from '@/hooks/useSessionStore';
 import { useSettings } from '@/hooks/useSettings';
 import { useSounds } from '@/hooks/useSounds';
 import { cardTextOn } from '@/ui/contrast';
+import { fitCardText, type Fit } from '@/ui/fitText';
 import { useLayout } from '@/ui/layout';
 import { Mascot } from '@/ui/Mascot';
 import { PopIn } from '@/ui/motion';
@@ -40,8 +41,13 @@ export default function RoundIntroScreen() {
 
   const [count, setCount] = useState(COUNT_FROM);
   // Upright, everything stacks; sideways it reads left to right.
-  const { landscape } = useLayout();
+  const { landscape, width } = useLayout();
   const upright = !landscape;
+  // Upright the headline gets the full width under the mascot, which is
+  // narrower than its fixed size assumed: a long name broke mid-word. It is
+  // fitted to that width instead. Sideways it shares a row and shrinks to fit.
+  const fitWho = (text: string) =>
+    upright ? fitCardText(text, width - space.xl * 2, 120, { maxSize: 46, minSize: 26, maxLines: 2, lineHeight: 1.04 }) : null;
   const [ready, setReady] = useState(false);
 
   useRoundScreenMode();
@@ -110,9 +116,9 @@ export default function RoundIntroScreen() {
                 {notice.overline}
               </Text>
             </View>
-            <Text style={[styles.who, { color: color.bone }, upright && styles.centred]} allowFontScaling={false} numberOfLines={2}>
+            <Headline fit={fitWho(notice.title)} color={color.bone} upright={upright}>
               {notice.title}
-            </Text>
+            </Headline>
             <Text style={[styles.rule, { color: color.bone }, upright && styles.centred]}>{notice.rule}</Text>
             <Text style={[styles.hint, { color: notice.tint }, upright && styles.centred]}>Tap when you’re ready</Text>
           </View>
@@ -144,9 +150,9 @@ export default function RoundIntroScreen() {
               </Text>
             </View>
           ) : null}
-          <Text style={[styles.who, { color: ink }, upright && styles.centred]} allowFontScaling={false} numberOfLines={2}>
+          <Headline fit={fitWho(who)} color={ink} upright={upright}>
             {who}
-          </Text>
+          </Headline>
           <Text style={[styles.hint, { color: ink }, upright && styles.centred]}>
             {settings.inputMode === 'tilt'
               ? 'Tip down if you got it, up to pass'
@@ -167,6 +173,27 @@ export default function RoundIntroScreen() {
         </View>
       </SafeAreaView>
     </Pressable>
+  );
+}
+
+/** Whose turn it is, or the rule coming up: the biggest words before the round. */
+function Headline({ children, fit, color: tint, upright }: { children: string; fit: Fit | null; color: string; upright: boolean }) {
+  return (
+    <Text
+      style={[
+        styles.who,
+        { color: tint },
+        fit && { fontSize: fit.fontSize, lineHeight: fit.lineHeight, letterSpacing: fit.fontSize * -0.032 },
+        upright && styles.centred,
+      ]}
+      allowFontScaling={false}
+      numberOfLines={fit ? fit.lines.length : 2}
+      adjustsFontSizeToFit
+      minimumFontScale={0.6}
+      accessibilityLabel={children}
+    >
+      {fit ? fit.lines.join('\n') : children}
+    </Text>
   );
 }
 

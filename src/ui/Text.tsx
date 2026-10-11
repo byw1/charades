@@ -18,6 +18,8 @@ export type TextProps = RNTextProps & {
   align?: 'left' | 'center' | 'right';
 };
 
+const DISPLAY: ReadonlySet<Variant> = new Set(['hero', 'display', 'title']);
+
 const tones: Record<Tone, string> = {
   default: color.text,
   muted: color.textMuted,
@@ -34,7 +36,9 @@ const tones: Record<Tone, string> = {
  * screen rather than following the type scale.
  *
  * Dynamic Type stays on, capped so the largest accessibility sizes still fit a
- * pill button rather than breaking out of it. `inverse` is dark text, for the
+ * pill button rather than breaking out of it. The display sizes are already
+ * huge, so they grow less: at the full cap a 44pt headline was wider than an
+ * upright phone. `inverse` is dark text, for the
  * few light surfaces in a dark app: the yellow button, a white sticker.
  */
 export function Text({ variant = 'body', tone = 'default', align, style, ...rest }: TextProps) {
@@ -44,7 +48,7 @@ export function Text({ variant = 'body', tone = 'default', align, style, ...rest
         [type[variant], { color: tones[tone] }, align ? { textAlign: align } : null],
         style,
       )}
-      maxFontSizeMultiplier={1.6}
+      maxFontSizeMultiplier={DISPLAY.has(variant) ? 1.2 : 1.6}
       {...rest}
     />
   );

@@ -122,3 +122,41 @@ describe('bundled cards', () => {
     }
   });
 });
+
+describe('upright', () => {
+  type Doc = { name: string; cards: { text: string }[] };
+  const cards = (bundledDeckDocuments as Doc[]).flatMap((deck) => deck.cards);
+
+  // An iPhone SE held upright, less the card's upright padding.
+  const UP_W = 375 - 44;
+  const UP_H = 667 - 192;
+
+  it('fits every card across the narrow width, and big enough to read', () => {
+    for (const card of cards) {
+      const h = isEmojiCard(card) ? UP_H * 0.66 : UP_H;
+      const fit = fitCardText(card.text, UP_W, h, { maxLines: 5 });
+      for (const line of fit.lines) {
+        expect(measureCard(line) * fit.fontSize).toBeLessThanOrEqual(UP_W);
+      }
+      expect({ card: card.text, size: fit.fontSize >= 32 }).toEqual({ card: card.text, size: true });
+    }
+  });
+
+  it('draws a title bigger when it may stack onto more lines', () => {
+    const three = fitCardText('Honey, I Shrunk the Kids', UP_W, UP_H).fontSize;
+    const five = fitCardText('Honey, I Shrunk the Kids', UP_W, UP_H, { maxLines: 5 }).fontSize;
+    expect(five).toBeGreaterThan(three);
+  });
+
+  it('keeps the round’s shouts on screen, whole words only', () => {
+    // The flash lines and the end of a round, on the narrowest upright phone.
+    const width = 375 - 56;
+    for (const shout of ['Got it', 'Yesss', 'Nailed it', 'Easy', 'Big brain', 'Pass', 'Next', 'Skip', 'Busted!', 'Time’s up!', 'Hat’s empty!']) {
+      const fit = fitCardText(shout, width, 330, { maxSize: 120, minSize: 40, maxLines: 2 });
+      expect(fit.lines.join(' ')).toBe(shout);
+      for (const line of fit.lines) {
+        expect(measureCard(line) * fit.fontSize).toBeLessThanOrEqual(width);
+      }
+    }
+  });
+});
