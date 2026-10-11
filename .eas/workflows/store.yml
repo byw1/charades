@@ -1,0 +1,39 @@
+# Builds Charades for iOS in the cloud and sends it to App Store Connect
+# (TestFlight) on every merge to main. Runs on Expo's servers, so nothing has
+# to run on a laptop. The build number goes up by one each time, because
+# eas.json uses remote versioning with autoIncrement on the production profile.
+#
+# Merges that only touch docs or the website copy are skipped to save builds.
+# To ship one by hand, open the project's Workflows page on expo.dev and run
+# this workflow, or put "[eas skip]" in a commit message to skip one.
+name: Ship to App Store Connect
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'app/**'
+      - 'src/**'
+      - 'assets/**'
+      - 'app.json'
+      - 'eas.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.eas/workflows/**'
+  workflow_dispatch: {}
+
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit_ios:
+    name: Send to App Store Connect
+    type: submit
+    needs: [build_ios]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production

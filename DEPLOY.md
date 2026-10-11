@@ -206,15 +206,22 @@ and it uploads with one command.
 
 ### Shipping an update
 
-Change the code, bump `"version"` in `app.json` (for example `0.1.0` →
-`0.2.0`), then:
+Every merge to `main` that changes the app builds it on Expo's servers and
+sends it to App Store Connect, with the next build number, usually within an
+hour. Nothing runs on your computer. The workflow is
+[`.eas/workflows/store.yml`](./.eas/workflows/store.yml); you can watch it, or
+run it by hand, on the project's **Workflows** page at
+[expo.dev](https://expo.dev). Merges that only touch docs are skipped.
 
-```sh
-npm run store
-```
+This needs the repository linked to the Expo project once: on expo.dev open the
+**charades** project → **Project settings** → **GitHub**, install the Expo
+GitHub app, and connect `byw1/charades`.
 
-Build numbers increase automatically. Then pick the new build in App Store
-Connect and submit it for review.
+For a new version number, bump `"version"` in `app.json` (for example `0.1.0`
+→ `0.2.0`) in the same change. When the build shows up in TestFlight, pick it
+in App Store Connect and submit it for review.
+
+`npm run store` still builds and uploads from your computer if you ever need to.
 
 ---
 
@@ -226,7 +233,7 @@ Connect and submit it for review.
 | `npm run setup` | Choose your app ID (once) |
 | `npm run phone:add` | Register an iPhone for direct installs |
 | `npm run phone` | Build an installable copy for your registered phones |
-| `npm run store` | Build and upload to App Store Connect / TestFlight |
+| `npm run store` | Build and upload from your computer (merges to `main` do this automatically) |
 | `npm run store:listing` | Upload the description, keywords and age rating |
 | `npm test` | Run the tests |
 

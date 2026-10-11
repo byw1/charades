@@ -14,6 +14,8 @@
   "submit": {
     "production": {
       "ios": {
+        "ascAppId": "6821315107",
+        "appleTeamId": "6XG4M99PT2",
         "appName": "Charades: Make Your Own Decks",
         "language": "en-US"
       }
