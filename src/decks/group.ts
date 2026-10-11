@@ -1,6 +1,6 @@
 import { makeCardId, makeDeckId, type RandomSource } from './ids';
 import { CARD_TEXT_SOFT_CAP, CURRENT_DECK_SCHEMA_VERSION, type Card, type Deck } from './types';
-import { t } from '@/i18n';
+import { getLocale, t } from '@/i18n';
 
 /**
  * "A deck about your group."
@@ -104,7 +104,7 @@ export function buildGroupDeck(input: GroupAnswers): Deck {
     name: input.name?.trim() || defaultGroupDeckName(),
     description: t('decks.group.deckDescription'),
     author: '',
-    language: 'en',
+    language: getLocale(),
     accentColor: input.accentColor,
     emoji: '👯',
     tags: ['group', 'custom'],
