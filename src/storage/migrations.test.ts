@@ -66,7 +66,7 @@ describe('migrate', () => {
     try {
       await db.execAsync(`PRAGMA user_version = ${LATEST_SCHEMA_VERSION + 1};`);
       await expect(migrate(db)).rejects.toThrow(MigrationError);
-      await expect(migrate(db)).rejects.toThrow(/Update Deckhead/);
+      await expect(migrate(db)).rejects.toThrow(/Update Charades/);
     } finally {
       db.close();
     }

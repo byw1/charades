@@ -166,7 +166,7 @@ export async function migrate(db: MigrationDriver): Promise<number[]> {
     // shape this build cannot read. Failing loudly beats writing to it and
     // corrupting decks the newer build could still have opened.
     throw new MigrationError(
-      `This app is older than the data on this device (data version ${current}, app reads up to ${LATEST_SCHEMA_VERSION}). Update Deckhead to open your decks.`,
+      `This app is older than the data on this device (data version ${current}, app reads up to ${LATEST_SCHEMA_VERSION}). Update Charades to open your decks.`,
     );
   }
 

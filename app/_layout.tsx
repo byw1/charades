@@ -1,15 +1,25 @@
 import { Stack } from 'expo-router';
+import { getLocales } from 'expo-localization';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { Appearance } from 'react-native';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAppFonts } from '@/hooks/useAppFonts';
+import { initLocale } from '@/i18n';
 import { color, scheme } from '@/ui/tokens';
 
 // Held until the typefaces are ready, so the first frame anyone sees is the
 // real one rather than a flash of system text.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+// The phone's language, settled before anything renders. Every translation
+// is bundled, so this is a lookup, not a download.
+try {
+  initLocale(getLocales());
+} catch {
+  // No locale information: stay in English.
+}
 
 // Native pieces — the keyboard, alerts, pickers — follow the app's theme
 // rather than the phone's.
