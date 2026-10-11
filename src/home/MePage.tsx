@@ -2,6 +2,8 @@ import { ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Friend, Rivalry } from '@/game/friends';
 import { badges as badgesFor, type PlayStats } from '@/game/stats';
+import { badgeHint, badgeTitle } from '@/i18n/gameText';
+import { t } from '@/i18n';
 import { CircleButton } from '@/ui/CircleButton';
 import { Icon, type IconName } from '@/ui/Icon';
 import { READABLE_WIDTH, useLayout } from '@/ui/layout';
@@ -36,20 +38,20 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
 
   const line =
     s.games === 0
-      ? 'No games yet. Your first one starts a streak 🔥'
+      ? t('home.me.noGames')
       : s.streak === 0
-        ? 'Streak’s at zero. Play today to start a new one.'
+        ? t('home.me.streakZero')
         : s.playedToday
-          ? `${s.streak} ${s.streak === 1 ? 'day' : 'days'} in a row. Same time tomorrow?`
-          : `${s.streak}-day streak ⏳ play today to keep it alive`;
+          ? t('home.me.streakToday', { count: s.streak })
+          : t('home.me.streakPending', { count: s.streak });
 
   return (
     <View style={[styles.page, { width, paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}>
       <View style={[styles.header, short && styles.headerShort]}>
         <Text variant={short ? 'display' : 'hero'} accessibilityRole="header">
-          You
+          {t('home.me.title')}
         </Text>
-        <CircleButton icon="settings" label="Settings" onPress={onSettings} />
+        <CircleButton icon="settings" label={t('home.me.settings')} onPress={onSettings} />
       </View>
 
       <ScrollView
@@ -63,7 +65,7 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
               🔥 {s.streak}
             </RNText>
             <Text variant="label" tone="muted">
-              day streak
+              {t('home.me.streakUnit', { count: s.streak })}
             </Text>
           </View>
         </View>
@@ -73,24 +75,24 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
         {/* Two by two upright; one row of four on a phone on its side. */}
         <View style={[styles.grid, short && styles.row]}>
           <View style={[styles.row, short && styles.grow]}>
-            <StatTile label="Cards guessed" value={s.cardsGuessed} tint={palette.yellow} />
-            <StatTile label="Best round" value={s.bestRound} tint={palette.green} />
+            <StatTile label={t('home.me.stats.cardsGuessed')} value={s.cardsGuessed} tint={palette.yellow} />
+            <StatTile label={t('home.me.stats.bestRound')} value={s.bestRound} tint={palette.green} />
           </View>
           <View style={[styles.row, short && styles.grow]}>
-            <StatTile label="Games" value={s.games} tint={palette.pink} />
-            <StatTile label="Rounds" value={s.rounds} tint={palette.blue} />
+            <StatTile label={t('home.me.stats.games')} value={s.games} tint={palette.pink} />
+            <StatTile label={t('home.me.stats.rounds')} value={s.rounds} tint={palette.blue} />
           </View>
         </View>
 
         {s.games > 0 ? (
-          <Tap onPress={onWrapped} squish={0.97} accessibilityLabel="Your night, wrapped. Make a story to share." contentStyle={styles.wrapped}>
+          <Tap onPress={onWrapped} squish={0.97} accessibilityLabel={t('home.me.wrappedLabel')} contentStyle={styles.wrapped}>
             <RNText style={styles.wrappedEmoji}>🎁</RNText>
             <View style={styles.grow}>
               <Text variant="heading" style={styles.wrappedTitle}>
-                Tonight, wrapped
+                {t('home.me.wrappedTitle')}
               </Text>
               <Text variant="caption" style={styles.wrappedSub}>
-                MVP, best round, most-passed card. One image to share.
+                {t('home.me.wrappedDetail')}
               </Text>
             </View>
             <Icon name="forward" size={18} color={color.ink} weight={3} />
@@ -99,14 +101,20 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
 
         {friends.length > 0 ? (
           <View>
-            <SectionLabel>Friends</SectionLabel>
+            <SectionLabel>{t('home.me.friends')}</SectionLabel>
             <View style={styles.friends}>
               {friends.slice(0, 6).map((friend, index) => (
                 <View
                   key={friend.name}
                   style={styles.friend}
                   accessible
-                  accessibilityLabel={`${index + 1}. ${friend.name}: ${friend.wins} wins, ${friend.cardsGuessed} cards guessed, ${friend.games} games`}
+                  accessibilityLabel={t('home.me.friendLabel', {
+                    rank: index + 1,
+                    name: friend.name,
+                    wins: friend.wins,
+                    cards: friend.cardsGuessed,
+                    games: friend.games,
+                  })}
                 >
                   <Text style={styles.rank}>{index + 1}</Text>
                   <Avatar name={friend.name} tint={tintFor(friend.name)} size={38} badge={index === 0 && friend.wins > 0 ? '👑' : undefined} />
@@ -115,13 +123,13 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
                       {friend.name}
                     </Text>
                     <Text variant="caption" tone="muted">
-                      {friend.cardsGuessed} cards · best {friend.bestRound} · {friend.games} {friend.games === 1 ? 'game' : 'games'}
+                      {t('home.me.friendLine', { cards: friend.cardsGuessed, best: friend.bestRound, count: friend.games })}
                     </Text>
                   </View>
                   <View style={styles.wins}>
                     <RNText style={styles.winsNumber}>{friend.wins}</RNText>
                     <Text variant="caption" tone="muted">
-                      {friend.wins === 1 ? 'win' : 'wins'}
+                      {t('home.me.winsUnit', { count: friend.wins })}
                     </Text>
                   </View>
                 </View>
@@ -129,28 +137,38 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
             </View>
             {rivalry ? (
               <ChatLine style={[styles.pad, styles.rivalry]}>
-                {`⚔️ Biggest rivalry: ${rivalry.a} vs ${rivalry.b}, ${rivalry.aWins}–${rivalry.bWins} across ${rivalry.games} games.`}
+                {t('home.me.rivalry', {
+                  a: rivalry.a,
+                  b: rivalry.b,
+                  aWins: rivalry.aWins,
+                  bWins: rivalry.bWins,
+                  games: rivalry.games,
+                })}
               </ChatLine>
             ) : null}
           </View>
         ) : null}
 
         <View>
-          <SectionLabel>{`Badges · ${earned} of ${list.length}`}</SectionLabel>
+          <SectionLabel>{t('home.me.badgesHeading', { earned, total: list.length })}</SectionLabel>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badges}>
             {list.map((badge) => (
               <View
                 key={badge.id}
                 style={[styles.badge, !badge.earned && styles.locked]}
                 accessible
-                accessibilityLabel={`${badge.title}, ${badge.earned ? 'earned' : `locked: ${badge.hint}`}`}
+                accessibilityLabel={
+                  badge.earned
+                    ? t('home.me.badgeEarnedLabel', { title: badgeTitle(badge.id) })
+                    : t('home.me.badgeLockedLabel', { title: badgeTitle(badge.id), hint: badgeHint(badge.id) })
+                }
               >
                 <RNText style={styles.badgeEmoji}>{badge.earned ? badge.emoji : '🔒'}</RNText>
                 <Text variant="label" align="center" numberOfLines={1}>
-                  {badge.title}
+                  {badgeTitle(badge.id)}
                 </Text>
                 <Text variant="caption" tone="muted" align="center" numberOfLines={2}>
-                  {badge.earned ? 'Unlocked' : badge.hint}
+                  {badge.earned ? t('home.me.unlocked') : badgeHint(badge.id)}
                 </Text>
               </View>
             ))}
@@ -158,12 +176,12 @@ export function MePage({ stats, friends, rivalry, onWrapped, onSettings, onRules
         </View>
 
         <Group>
-          <Row icon="help" tint={palette.blue} title="How to play" onPress={onRules} />
-          <Row icon="settings" tint={palette.purple} title="Settings" onPress={onSettings} last />
+          <Row icon="help" tint={palette.blue} title={t('home.me.howToPlay')} onPress={onRules} />
+          <Row icon="settings" tint={palette.purple} title={t('home.me.settings')} onPress={onSettings} last />
         </Group>
 
         <Text variant="caption" tone="faint" align="center" style={styles.pad}>
-          Works offline. No accounts, no ads, no tracking. Your stats never leave this phone.
+          {t('home.me.privacy')}
         </Text>
       </ScrollView>
     </View>

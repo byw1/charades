@@ -9,6 +9,7 @@ import { DEFAULT_DECK_EMOJI } from '@/decks/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useDeckImport } from '@/hooks/useDeckImport';
 import { useHaptics } from '@/hooks/useHaptics';
+import { t } from '@/i18n';
 import { Button } from '@/ui/Button';
 import { Chip } from '@/ui/Chip';
 import { cardTextOn } from '@/ui/contrast';
@@ -121,18 +122,19 @@ export default function ImportDeckScreen() {
           </PopIn>
           <PopIn delay={100} style={styles.celebrateCopy}>
             <Text variant="display" align="center">
-              {done.action === 'replaced' ? 'Deck updated!' : 'Deck added!'}
+              {done.action === 'replaced' ? t('decks.import.deckUpdated') : t('decks.import.deckAdded')}
             </Text>
             <Text variant="body" tone="muted" align="center">
-              {done.deck.name} · {done.deck.cards.length} cards
-              {done.action === 'copied' ? ' · saved as a copy' : ''}
+              {done.action === 'copied'
+                ? t('decks.import.doneSummaryCopy', { name: done.deck.name, count: done.deck.cards.length })
+                : t('decks.import.doneSummary', { name: done.deck.name, count: done.deck.cards.length })}
             </Text>
           </PopIn>
         </View>
         <Footer>
-          <Button label="Open it" variant="primary" size="lg" onPress={() => router.replace(`/decks/${done.deck.id}`)} />
+          <Button label={t('decks.import.openIt')} variant="primary" size="lg" onPress={() => router.replace(`/decks/${done.deck.id}`)} />
           <Button
-            label="Import another"
+            label={t('decks.import.importAnother')}
             onPress={() => {
               importer.reset();
               scanning.current = false;
@@ -150,7 +152,7 @@ export default function ImportDeckScreen() {
 
     return (
       <Screen>
-        <TopBar leading="close" onLeading={router.back} title="Add this deck?" />
+        <TopBar leading="close" onLeading={router.back} title={t('decks.import.previewTitle')} />
 
         <ScrollView contentContainerStyle={styles.body}>
           <PopIn>
@@ -162,8 +164,9 @@ export default function ImportDeckScreen() {
                 {deck.name}
               </Text>
               <Text variant="label" style={{ color: onAccent, opacity: 0.9 }}>
-                {deck.cards.length} {deck.cards.length === 1 ? 'card' : 'cards'}
-                {deck.author ? ` · by ${deck.author}` : ''}
+                {deck.author
+                  ? t('decks.import.previewCountByAuthor', { count: deck.cards.length, author: deck.author })
+                  : t('decks.cardCount', { count: deck.cards.length })}
               </Text>
             </View>
           </PopIn>
@@ -186,7 +189,7 @@ export default function ImportDeckScreen() {
             {deck.cards.length > 6 ? (
               <View style={styles.sampleChip}>
                 <Text variant="label" tone="muted">
-                  +{deck.cards.length - 6} more
+                  {t('decks.import.moreCards', { count: deck.cards.length - 6 })}
                 </Text>
               </View>
             ) : null}
@@ -201,10 +204,10 @@ export default function ImportDeckScreen() {
           {preview.collides ? (
             <View style={[styles.pad, styles.collision]}>
               <Text variant="label" style={{ color: palette.yellow }}>
-                YOU ALREADY HAVE THIS DECK
+                {t('decks.import.collisionTitle')}
               </Text>
               <Text variant="caption" tone="muted">
-                Replacing overwrites your copy, including any changes you made. Keeping both is always safe.
+                {t('decks.import.collisionBody')}
               </Text>
             </View>
           ) : null}
@@ -214,7 +217,7 @@ export default function ImportDeckScreen() {
           {preview.collides ? (
             <>
               <Button
-                label="Keep both"
+                label={t('decks.import.keepBoth')}
                 variant="primary"
                 size="lg"
                 onPress={() => {
@@ -222,7 +225,7 @@ export default function ImportDeckScreen() {
                 }}
               />
               <Button
-                label="Replace mine"
+                label={t('decks.import.replaceMine')}
                 variant="danger"
                 onPress={() => {
                   if (db) void importer.confirmReplace(db);
@@ -231,7 +234,7 @@ export default function ImportDeckScreen() {
             </>
           ) : (
             <Button
-              label="Add this deck"
+              label={t('decks.import.addThisDeck')}
               variant="primary"
               size="lg"
               icon="plus"
@@ -241,7 +244,7 @@ export default function ImportDeckScreen() {
             />
           )}
           <Button
-            label="Not now"
+            label={t('decks.import.notNow')}
             variant="ghost"
             onPress={() => {
               importer.reset();
@@ -255,12 +258,12 @@ export default function ImportDeckScreen() {
 
   return (
     <Screen>
-      <TopBar leading="close" onLeading={router.back} title="Import a deck" />
+      <TopBar leading="close" onLeading={router.back} title={t('decks.import.title')} />
 
       <View style={styles.methods}>
-        <Chip grow emoji="📷" label="Scan" selected={method === 'scan'} onPress={() => setMethod('scan')} />
-        <Chip grow emoji="📋" label="Paste" selected={method === 'paste'} onPress={() => setMethod('paste')} />
-        <Chip grow emoji="📁" label="File" selected={method === 'file'} onPress={() => setMethod('file')} />
+        <Chip grow emoji="📷" label={t('decks.import.methods.scan')} selected={method === 'scan'} onPress={() => setMethod('scan')} />
+        <Chip grow emoji="📋" label={t('decks.import.methods.paste')} selected={method === 'paste'} onPress={() => setMethod('paste')} />
+        <Chip grow emoji="📁" label={t('decks.import.methods.file')} selected={method === 'file'} onPress={() => setMethod('file')} />
       </View>
 
       {error ? (
@@ -317,16 +320,18 @@ export default function ImportDeckScreen() {
               </View>
               <View style={styles.scanHint} pointerEvents="none">
                 <Text variant="label" tone="inverse">
-                  {progress ? `Got ${progress.have} of ${progress.total} codes. Keep it there…` : 'Point at a Charades code'}
+                  {progress
+                    ? t('decks.import.scanProgress', { have: progress.have, total: progress.total })
+                    : t('decks.import.scanHint')}
                 </Text>
               </View>
             </View>
           ) : (
             <View style={styles.permission}>
               <Mascot size={110} mood="wink" poke />
-              <ChatLine>I only use the camera to read deck codes. No photos are taken or kept.</ChatLine>
+              <ChatLine>{t('decks.import.cameraExplainer')}</ChatLine>
               <Button
-                label={permission?.canAskAgain === false ? 'Open Settings' : 'Allow camera'}
+                label={permission?.canAskAgain === false ? t('decks.import.openSettings') : t('decks.import.allowCamera')}
                 variant="primary"
                 icon="camera"
                 onPress={() => {
@@ -345,14 +350,14 @@ export default function ImportDeckScreen() {
           <Field
             value={pasted}
             onChangeText={setPasted}
-            placeholder="Paste a deck link or a deck code"
-            accessibilityLabel="Deck link or code"
+            placeholder={t('decks.import.pastePlaceholder')}
+            accessibilityLabel={t('decks.import.pasteLabel')}
             multiline
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.pasteBox}
           />
-          <Button label="Import" variant="primary" size="lg" disabled={!pasted.trim()} onPress={() => offer(pasted)} />
+          <Button label={t('decks.import.importButton')} variant="primary" size="lg" disabled={!pasted.trim()} onPress={() => offer(pasted)} />
         </View>
       ) : null}
 
@@ -360,9 +365,9 @@ export default function ImportDeckScreen() {
         <View style={[styles.area, styles.fileArea]}>
           <Mascot size={110} mood="happy" glyph="📁" />
           <Text variant="body" tone="muted" align="center">
-            Open a .charades file someone sent you — from Messages, Mail, Files or AirDrop.
+            {t('decks.import.fileExplainer')}
           </Text>
-          <Button label="Choose a file" variant="primary" icon="file" onPress={() => void pickFile()} style={styles.stretch} />
+          <Button label={t('decks.import.chooseFile')} variant="primary" icon="file" onPress={() => void pickFile()} style={styles.stretch} />
         </View>
       ) : null}
     </Screen>

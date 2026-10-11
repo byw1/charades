@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charades utilise l’appareil photo pour scanner les codes de paquets et prendre des photos pour vos propres cartes. Rien ne quitte votre téléphone, sauf si vous le partagez.",
+    "NSMotionUsageDescription": "Charades utilise les mouvements pour les commandes par inclinaison : penchez le téléphone vers le bas quand c’est trouvé, vers le haut pour passer. Rien n’est enregistré.",
+    "NSPhotoLibraryUsageDescription": "Charades vous permet de choisir des photos pour vos propres cartes. Elles restent sur votre téléphone, dans vos paquets."
+  }
+}

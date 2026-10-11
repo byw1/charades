@@ -5,6 +5,7 @@ import { MIN_PLAYABLE_CARDS, summaryIsPlayable, type DeckSummary } from '@/decks
 import { useDatabase } from '@/hooks/useDatabase';
 import { withDecks } from '@/game/session';
 import { useNewGameStore } from '@/hooks/useNewGameStore';
+import { t } from '@/i18n';
 import { useSessionStore } from '@/hooks/useSessionStore';
 import { getDeck, listDeckSummaries } from '@/storage/deckRepo';
 import { saveSession } from '@/storage/sessionRepo';
@@ -91,8 +92,8 @@ export default function NewGameDecksScreen() {
     <StepHeader
       step={1}
       of={changing ? 1 : 3}
-      title={changing ? 'Change decks' : 'Pick your decks'}
-      subtitle={changing ? 'Scores carry on. Mix in new ones or swap them out.' : 'One, or mix a few.'}
+      title={changing ? t('newGame.decks.changeTitle') : t('newGame.decks.title')}
+      subtitle={changing ? t('newGame.decks.changeSubtitle') : t('newGame.decks.subtitle')}
       onClose={router.back}
     />
   );
@@ -101,7 +102,7 @@ export default function NewGameDecksScreen() {
     return (
       <Screen>
         {header}
-        <EmptyState title="Couldn’t open your decks" body={database.message} mood="sad" />
+        <EmptyState title={t('newGame.decks.openError')} body={database.message} mood="sad" />
       </Screen>
     );
   }
@@ -134,7 +135,7 @@ export default function NewGameDecksScreen() {
               squish={0.98}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: selected, disabled: !playable }}
-              accessibilityLabel={`${item.name}, ${item.cardCount} cards`}
+              accessibilityLabel={t('newGame.decks.rowA11y', { name: item.name, count: item.cardCount })}
               contentStyle={[styles.row, !playable && styles.disabled]}
             >
               <Avatar name={item.name} tint={item.accentColor} size={46} />
@@ -143,7 +144,9 @@ export default function NewGameDecksScreen() {
                   {item.name}
                 </Text>
                 <Text variant="caption" tone="muted">
-                  {item.cardCount} cards{playable ? '' : ' · too few to play'}
+                  {playable
+                    ? t('newGame.decks.cardCount', { count: item.cardCount })
+                    : t('newGame.decks.cardCountTooFew', { count: item.cardCount })}
                 </Text>
               </View>
               <View style={[styles.check, selected && styles.checkOn]}>
@@ -152,24 +155,24 @@ export default function NewGameDecksScreen() {
             </Tap>
           );
         }}
-        ListEmptyComponent={<EmptyState title="No decks yet" body="Something went wrong opening the free decks." mood="sad" />}
+        ListEmptyComponent={<EmptyState title={t('newGame.decks.emptyTitle')} body={t('newGame.decks.emptyBody')} mood="sad" />}
       />
 
       <Footer>
         {chosen.length > 0 ? (
           <Text variant="caption" tone="muted" numberOfLines={1} align="center">
-            {chosen.map((d) => d.name).join(', ')}
+            {chosen.map((d) => d.name).join(t('newGame.decks.listSeparator'))}
           </Text>
         ) : null}
         <Button
           label={
             deckIds.length === 0
-              ? 'Pick at least one'
+              ? t('newGame.decks.pickAtLeastOne')
               : !enough
-                ? `${MIN_PLAYABLE_CARDS} cards needed`
+                ? t('newGame.decks.cardsNeeded', { count: MIN_PLAYABLE_CARDS })
                 : changing
-                  ? `Play these · ${totalCards} cards`
-                  : `Next · ${totalCards} cards`
+                  ? t('newGame.decks.playThese', { count: totalCards })
+                  : t('newGame.decks.next', { count: totalCards })
           }
           variant="blue"
           size="lg"

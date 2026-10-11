@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { buildGroupDeck, DEFAULT_GROUP_DECK_NAME, GROUP_PROMPTS, groupCards, type GroupPhoto } from '@/decks/group';
+import { buildGroupDeck, defaultGroupDeckName, GROUP_PROMPTS, groupCards, type GroupPhoto } from '@/decks/group';
 import { MIN_PLAYABLE_CARDS } from '@/decks/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useHaptics } from '@/hooks/useHaptics';
+import { t } from '@/i18n';
 import { pickPhotos } from '@/media/photos';
 import { upsertDeck } from '@/storage/deckRepo';
 import { Button } from '@/ui/Button';
@@ -82,7 +83,7 @@ export default function GroupDeckScreen() {
 
   const tally = (
     <Text variant="label" tone={short > 0 ? 'muted' : 'correct'} align="center">
-      {count} {count === 1 ? 'card' : 'cards'} so far{short > 0 ? ` · ${short} more to play` : ' · ready to play'}
+      {short > 0 ? t('decks.group.tallyShort', { count, short }) : t('decks.group.tallyReady', { count })}
     </Text>
   );
 
@@ -107,8 +108,8 @@ export default function GroupDeckScreen() {
             {tally}
           </View>
           <Footer>
-            <Button label={value.trim() ? 'Next' : 'Skip'} variant="primary" size="lg" icon="forward" onPress={next} />
-            {step > 0 ? <Button label="Back" variant="ghost" onPress={back} /> : null}
+            <Button label={value.trim() ? t('common.next') : t('decks.group.skip')} variant="primary" size="lg" icon="forward" onPress={next} />
+            {step > 0 ? <Button label={t('common.back')} variant="ghost" onPress={back} /> : null}
           </Footer>
         </KeyboardAvoidingView>
       </Screen>
@@ -121,8 +122,8 @@ export default function GroupDeckScreen() {
         <StepHeader
           step={step + 1}
           of={STEPS}
-          title="📸 Faces"
-          subtitle="Pick photos of the group and name each one. The room sees the face; the guesser has to say the name."
+          title={t('decks.group.faces.title')}
+          subtitle={t('decks.group.faces.subtitle')}
           onClose={router.back}
           mood="excited"
         />
@@ -134,27 +135,27 @@ export default function GroupDeckScreen() {
                 <Field
                   value={photo.name}
                   onChangeText={(text) => setPhotos((all) => all.map((p, i) => (i === index ? { ...p, name: text } : p)))}
-                  placeholder="Who’s this?"
-                  accessibilityLabel={`Name for photo ${index + 1}`}
+                  placeholder={t('decks.group.faces.namePlaceholder')}
+                  accessibilityLabel={t('decks.group.faces.nameLabel', { index: index + 1 })}
                   autoCapitalize="words"
                   style={styles.grow}
                 />
                 <Pressable
                   onPress={() => setPhotos((all) => all.filter((_, i) => i !== index))}
                   accessibilityRole="button"
-                  accessibilityLabel={`Remove photo ${index + 1}`}
+                  accessibilityLabel={t('decks.group.faces.removeLabel', { index: index + 1 })}
                   hitSlop={8}
                 >
                   <Icon name="trash" size={20} color={color.danger} weight={3} />
                 </Pressable>
               </View>
             ))}
-            <Button label={busy ? 'Adding…' : photos.length ? 'Add more photos' : 'Choose photos'} icon="camera" disabled={busy} onPress={() => void addPhotos()} />
+            <Button label={busy ? t('decks.group.faces.adding') : photos.length ? t('decks.group.faces.addMore') : t('decks.group.faces.choose')} icon="camera" disabled={busy} onPress={() => void addPhotos()} />
             {tally}
           </ScrollView>
           <Footer>
-            <Button label={photos.length ? 'Next' : 'Skip'} variant="primary" size="lg" icon="forward" onPress={next} />
-            <Button label="Back" variant="ghost" onPress={back} />
+            <Button label={photos.length ? t('common.next') : t('decks.group.skip')} variant="primary" size="lg" icon="forward" onPress={next} />
+            <Button label={t('common.back')} variant="ghost" onPress={back} />
           </Footer>
         </KeyboardAvoidingView>
       </Screen>
@@ -164,18 +165,18 @@ export default function GroupDeckScreen() {
   const ink = cardTextOn(accent);
   return (
     <Screen>
-      <StepHeader step={STEPS} of={STEPS} title="🎉 Name it" subtitle="Pick a name and a colour." onClose={router.back} mood="excited" />
+      <StepHeader step={STEPS} of={STEPS} title={t('decks.group.nameStep.title')} subtitle={t('decks.group.nameStep.subtitle')} onClose={router.back} mood="excited" />
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <View style={[styles.preview, { backgroundColor: accent }]}>
             <Text variant="display" style={{ color: ink }} numberOfLines={2}>
-              {name.trim() || DEFAULT_GROUP_DECK_NAME}
+              {name.trim() || defaultGroupDeckName()}
             </Text>
             <Text variant="label" style={{ color: ink, opacity: 0.85 }}>
-              {count} {count === 1 ? 'card' : 'cards'}
+              {t('decks.cardCount', { count })}
             </Text>
           </View>
-          <Field value={name} onChangeText={setName} placeholder={DEFAULT_GROUP_DECK_NAME} accessibilityLabel="Deck name" size="heading" maxLength={60} />
+          <Field value={name} onChangeText={setName} placeholder={defaultGroupDeckName()} accessibilityLabel={t('decks.group.nameStep.nameLabel')} size="heading" maxLength={60} />
           <View style={styles.swatches} accessibilityRole="radiogroup">
             {deckColors.map((c) => (
               <Pressable
@@ -183,20 +184,20 @@ export default function GroupDeckScreen() {
                 onPress={() => setAccent(c)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: c === accent }}
-                accessibilityLabel={`Deck colour ${c}`}
+                accessibilityLabel={t('decks.group.nameStep.colourLabel', { colour: c })}
                 style={[styles.swatch, { backgroundColor: c }, c === accent && styles.swatchOn]}
               />
             ))}
           </View>
           {short > 0 ? (
             <Text variant="caption" tone="muted" align="center">
-              {short} more {short === 1 ? 'card' : 'cards'} and it’s playable. Make it now and add the rest in the editor.
+              {t('decks.group.nameStep.shortHint', { count: short })}
             </Text>
           ) : null}
         </ScrollView>
         <Footer>
-          <Button label={busy ? 'Making it…' : 'Make the deck'} variant="primary" size="lg" icon="check" disabled={busy || count === 0} onPress={() => void make()} />
-          <Button label="Back" variant="ghost" onPress={back} />
+          <Button label={busy ? t('decks.group.nameStep.making') : t('decks.group.nameStep.make')} variant="primary" size="lg" icon="check" disabled={busy || count === 0} onPress={() => void make()} />
+          <Button label={t('common.back')} variant="ghost" onPress={back} />
         </Footer>
       </KeyboardAvoidingView>
     </Screen>

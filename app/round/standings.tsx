@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { forfeitFor } from '@/game/forfeits';
 import { makeSessionId } from '@/game/ids';
 import { playerStandings, standings } from '@/game/scoring';
 import { canChangeDecks, rematch, sessionWinState, whoseTurn } from '@/game/session';
@@ -13,6 +12,8 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useRoundScreenMode } from '@/hooks/useRoundScreenMode';
 import { useSessionStore } from '@/hooks/useSessionStore';
 import { useSounds } from '@/hooks/useSounds';
+import { t } from '@/i18n';
+import { forfeitText, phaseTitle, teamName } from '@/i18n/gameText';
 import { getDeck } from '@/storage/deckRepo';
 import { discardOtherUnfinishedSessions, saveSession } from '@/storage/sessionRepo';
 import { Button } from '@/ui/Button';
@@ -83,9 +84,9 @@ export default function StandingsScreen() {
   if (!session) {
     return (
       <Screen>
-        <EmptyState title="No game in progress" body="Start a new one from the home screen." />
+        <EmptyState title={t('round.standings.noGameTitle')} body={t('round.standings.noGameBody')} />
         <Footer>
-          <Button label="Home" variant="primary" icon="home" onPress={() => router.replace('/')} />
+          <Button label={t('round.standings.home')} variant="primary" icon="home" onPress={() => router.replace('/')} />
         </Footer>
       </Screen>
     );
@@ -94,6 +95,7 @@ export default function StandingsScreen() {
   const turn = whoseTurn(session);
   const played = session.rounds.filter((r) => r.endedAt !== null).length;
   const loser = winState.over && session.settings.forfeits ? lastPlace(table, players, solo) : null;
+  const nameOf = (name: string) => teamName({ name }, session.teams);
 
   const playAgain = async () => {
     if (database.status !== 'ready' || busy) return;
@@ -126,9 +128,9 @@ export default function StandingsScreen() {
   };
 
   const confirmRestart = () =>
-    Alert.alert('Start over?', 'Scores go back to zero. Same players, same decks.', [
-      { text: 'Keep going', style: 'cancel' },
-      { text: 'Start over', style: 'destructive', onPress: () => void playAgain() },
+    Alert.alert(t('round.standings.restartTitle'), t('round.standings.restartMessage'), [
+      { text: t('round.standings.keepGoing'), style: 'cancel' },
+      { text: t('round.standings.startOver'), style: 'destructive', onPress: () => void playAgain() },
     ]);
 
   const goHome = () => {
@@ -139,23 +141,25 @@ export default function StandingsScreen() {
 
   const headline = winState.over
     ? solo
-      ? 'GG 🎉'
+      ? t('round.standings.headlineSolo')
       : winState.winners.length === 1
-        ? `${winState.winners[0]!.teamName} win 👑`
-        : 'It’s a tie 🤝'
-    : 'Standings';
+        ? t('round.standings.headlineWinner', { team: nameOf(winState.winners[0]!.teamName) })
+        : t('round.standings.headlineTie')
+    : t('round.standings.headlineStandings');
 
   const bubble = winState.over
     ? solo
-      ? `${table[0]?.score ?? 0} points between you. Run it back?`
+      ? t('round.standings.bubbleSolo', { count: table[0]?.score ?? 0 })
       : winState.winners.length === 1
         ? (table[0]?.score ?? 0) - (table[1]?.score ?? 0) <= 3
-          ? 'That was close. Rematch?'
-          : 'Not even close. Rematch?'
-        : `${winState.winners.map((w) => w.teamName).join(' and ')} are level. Settle it?`
+          ? t('round.standings.bubbleClose')
+          : t('round.standings.bubbleNotClose')
+        : t('round.standings.bubbleTie', {
+            teams: winState.winners.map((w) => nameOf(w.teamName)).join(t('round.standings.teamListJoiner')),
+          })
     : turn?.playerName
-      ? `${turn.playerName}, you’re up next.`
-      : `${played} ${played === 1 ? 'round' : 'rounds'} down. Keep it going.`;
+      ? t('round.standings.bubbleNextPlayer', { name: turn.playerName })
+      : t('round.standings.bubbleRoundsDown', { count: played });
 
   // The headline sits beside the mascot, and upright that leaves it barely
   // half the screen: a winning team's name at the hero size broke mid-word.
@@ -199,10 +203,10 @@ export default function StandingsScreen() {
             </Text>
             <View style={styles.rowBody}>
               <Text variant="overline" tone="muted">
-                PHASE {hat.phase} OF 3 · {phaseInfo(hat.phase).title.toUpperCase()}
+                {t('round.standings.hatOverline', { phase: hat.phase, title: phaseTitle(hat.phase).toUpperCase() })}
               </Text>
               <Text variant="heading">
-                {hat.remaining.length} of {hat.total} cards left in the hat
+                {t('round.standings.hatLeft', { remaining: hat.remaining.length, count: hat.total })}
               </Text>
               <View style={styles.hatTrack}>
                 <View style={[styles.hatFill, { width: `${(hat.guessed / Math.max(1, hat.total)) * 100}%` }]} />
@@ -214,9 +218,9 @@ export default function StandingsScreen() {
         {loser ? (
           <PopIn from="rise" delay={140} style={styles.forfeit}>
             <Text variant="overline" style={{ color: palette.pink }}>
-              😈 FORFEIT FOR {loser.toUpperCase()}
+              {t('round.standings.forfeitOverline', { name: (solo ? loser : nameOf(loser)).toUpperCase() })}
             </Text>
-            <Text variant="heading">{forfeitFor(session.id)}</Text>
+            <Text variant="heading">{forfeitText(session.id)}</Text>
           </PopIn>
         ) : null}
 
@@ -224,7 +228,7 @@ export default function StandingsScreen() {
         {winState.over ? null : (
           <View style={styles.timerRow}>
             <Button
-              label={`Next round: ${session.settings.roundSeconds}s`}
+              label={t('round.standings.nextRoundSeconds', { seconds: session.settings.roundSeconds })}
               icon="timer"
               size="sm"
               onPress={() =>
@@ -232,7 +236,7 @@ export default function StandingsScreen() {
                   ? void setRoundSeconds(database.db, nextRoundSeconds(session.settings.roundSeconds))
                   : undefined
               }
-              accessibilityHint="Tap to cycle 30, 60 and 90 seconds"
+              accessibilityHint={t('round.standings.nextRoundSecondsHint')}
             />
           </View>
         )}
@@ -241,7 +245,7 @@ export default function StandingsScreen() {
             table is the interesting one and goes first. */}
         {solo ? null : (
           <View style={styles.section}>
-            <SectionLabel>Teams</SectionLabel>
+            <SectionLabel>{t('round.standings.teams')}</SectionLabel>
             {table.map((standing, index) => {
               const winner = winState.over && winState.winners.some((w) => w.teamId === standing.teamId);
 
@@ -249,14 +253,17 @@ export default function StandingsScreen() {
                 <PopIn key={standing.teamId} from="rise" delay={160 + index * 70}>
                   <View style={[styles.row, winner && styles.winnerRow]}>
                     <Text style={styles.rank}>{index + 1}</Text>
-                    <Avatar name={standing.teamName} tint={standing.teamColor} badge={medal(index, winner)} />
+                    <Avatar name={nameOf(standing.teamName)} tint={standing.teamColor} badge={medal(index, winner)} />
                     <View style={styles.rowBody}>
                       <Text variant="heading" numberOfLines={1}>
-                        {standing.teamName}
+                        {nameOf(standing.teamName)}
                       </Text>
                       <Text variant="caption" tone="muted">
-                        {standing.correct} got · {standing.passed} {standing.passed === 1 ? 'pass' : 'passes'} ·{' '}
-                        {standing.roundsPlayed} {standing.roundsPlayed === 1 ? 'round' : 'rounds'}
+                        {[
+                          t('round.standings.statGot', { count: standing.correct }),
+                          t('round.standings.statPasses', { count: standing.passed }),
+                          t('round.standings.statRounds', { count: standing.roundsPlayed }),
+                        ].join(' · ')}
                       </Text>
                     </View>
                     <Text style={[styles.score, winner && { color: color.brand }]}>{standing.score}</Text>
@@ -270,15 +277,15 @@ export default function StandingsScreen() {
         {/* One team with no names has no table to show, so show the total. */}
         {solo && players.length === 0 && table[0] ? (
           <PopIn from="rise" delay={160} style={styles.totals}>
-            <StatTile label="points" value={table[0].score} tint={color.brand} />
-            <StatTile label="got it" value={table[0].correct} tint={color.correct} />
-            <StatTile label={played === 1 ? 'round' : 'rounds'} value={played} tint={palette.blue} />
+            <StatTile label={t('round.shared.points')} value={table[0].score} tint={color.brand} />
+            <StatTile label={t('round.shared.gotIt')} value={table[0].correct} tint={color.correct} />
+            <StatTile label={t('round.shared.roundsLabel', { count: played })} value={played} tint={palette.blue} />
           </PopIn>
         ) : null}
 
         {players.length > 0 ? (
           <View style={styles.section}>
-            <SectionLabel>{solo ? 'Scores' : 'By player'}</SectionLabel>
+            <SectionLabel>{solo ? t('round.standings.scores') : t('round.standings.byPlayer')}</SectionLabel>
             {players.map((player, index) => (
               <PopIn key={`${player.teamId}/${player.playerName}`} from="rise" delay={220 + index * 60}>
                 <View style={styles.row}>
@@ -293,7 +300,10 @@ export default function StandingsScreen() {
                       {player.playerName}
                     </Text>
                     <Text variant="caption" tone="muted">
-                      {player.correct} got · {player.roundsPlayed} {player.roundsPlayed === 1 ? 'round' : 'rounds'}
+                      {[
+                        t('round.standings.statGot', { count: player.correct }),
+                        t('round.standings.statRounds', { count: player.roundsPlayed }),
+                      ].join(' · ')}
                     </Text>
                   </View>
                   <Text style={styles.score}>{player.score}</Text>
@@ -305,7 +315,7 @@ export default function StandingsScreen() {
 
         {poolExhausted ? (
           <Text variant="caption" tone="muted" align="center" style={styles.note}>
-            The decks ran out and got reshuffled.
+            {t('round.shared.reshuffled')}
           </Text>
         ) : null}
       </ScrollView>
@@ -314,7 +324,7 @@ export default function StandingsScreen() {
         {winState.over ? (
           <>
             <Button
-              label={busy ? 'Starting…' : 'Run it back'}
+              label={busy ? t('round.standings.starting') : t('round.standings.runItBack')}
               variant="primary"
               size="lg"
               icon="reset"
@@ -322,14 +332,14 @@ export default function StandingsScreen() {
               onPress={() => void playAgain()}
             />
             <View style={styles.footerRow}>
-              <Button label="Wrapped" icon="share" onPress={() => router.push('/wrapped')} style={styles.grow} />
-              <Button label="Home" icon="home" onPress={goHome} style={styles.grow} />
+              <Button label={t('round.standings.wrapped')} icon="share" onPress={() => router.push('/wrapped')} style={styles.grow} />
+              <Button label={t('round.standings.home')} icon="home" onPress={goHome} style={styles.grow} />
             </View>
           </>
         ) : (
           <>
             <Button
-              label={turn?.playerName ? `Next up: ${turn.playerName}` : 'Next round'}
+              label={turn?.playerName ? t('round.standings.nextUp', { name: turn.playerName }) : t('round.standings.nextRound')}
               variant="primary"
               size="lg"
               icon="play"
@@ -339,19 +349,19 @@ export default function StandingsScreen() {
                 without leaving the game. */}
             {short ? (
               // Sideways the footer is already a row, so these join it.
-              <Button label="Start over" icon="reset" onPress={confirmRestart} />
+              <Button label={t('round.standings.startOver')} icon="reset" onPress={confirmRestart} />
             ) : (
               <View style={styles.footerRow}>
-                <Button label="Start over" icon="reset" size="sm" onPress={confirmRestart} style={styles.grow} />
+                <Button label={t('round.standings.startOver')} icon="reset" size="sm" onPress={confirmRestart} style={styles.grow} />
                 {canChangeDecks(session) ? (
-                  <Button label="Change decks" icon="decks" size="sm" onPress={() => router.push('/new/decks?change=1')} style={styles.grow} />
+                  <Button label={t('round.standings.changeDecks')} icon="decks" size="sm" onPress={() => router.push('/new/decks?change=1')} style={styles.grow} />
                 ) : null}
               </View>
             )}
             {short && canChangeDecks(session) ? (
-              <Button label="Decks" icon="decks" onPress={() => router.push('/new/decks?change=1')} />
+              <Button label={t('round.standings.decks')} icon="decks" onPress={() => router.push('/new/decks?change=1')} />
             ) : null}
-            <Button label="Finish later" onPress={goHome} accessibilityHint="Your game is saved" />
+            <Button label={t('round.standings.finishLater')} onPress={goHome} accessibilityHint={t('round.standings.finishLaterHint')} />
           </>
         )}
       </Footer>

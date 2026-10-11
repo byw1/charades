@@ -8,6 +8,8 @@ import type { Outcome } from '@/game/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useRoundScreenMode } from '@/hooks/useRoundScreenMode';
 import { findPoolCard, useSessionStore } from '@/hooks/useSessionStore';
+import { t } from '@/i18n';
+import { teamName, twistTitle } from '@/i18n/gameText';
 import { Button } from '@/ui/Button';
 import { Confetti } from '@/ui/Confetti';
 import { Mascot, type MascotMood } from '@/ui/Mascot';
@@ -58,7 +60,7 @@ export default function RoundRecapScreen() {
   // The round is still open, so whoseTurn names whoever just played it.
   const turn = session ? whoseTurn(session) : null;
   const showTeam = (session?.teams.length ?? 0) > 1;
-  const who = [showTeam ? turn?.team.name : null, turn?.playerName].filter(Boolean).join(' · ');
+  const who = [showTeam && turn && session ? teamName(turn.team, session.teams) : null, turn?.playerName].filter(Boolean).join(' · ');
 
   const { headline, mood } = verdict(correct);
 
@@ -75,7 +77,7 @@ export default function RoundRecapScreen() {
   };
 
   const continueButton = (
-    <Button label={saving ? 'Saving…' : 'Continue'} variant="primary" size="lg" disabled={saving} onPress={() => void done()} />
+    <Button label={saving ? t('round.recap.saving') : t('round.recap.continue')} variant="primary" size="lg" disabled={saving} onPress={() => void done()} />
   );
 
   return (
@@ -97,27 +99,29 @@ export default function RoundRecapScreen() {
           </View>
 
           <PopIn from="rise" delay={100} style={styles.stats}>
-            <StatTile label="got it" value={correct} tint={color.correct} />
-            <StatTile label={passed === 1 ? 'pass' : 'passes'} value={passed} tint={color.pass} />
-            <StatTile label="points" value={score} tint={color.brand} />
+            <StatTile label={t('round.shared.gotIt')} value={correct} tint={color.correct} />
+            <StatTile label={t('round.recap.passesLabel', { count: passed })} value={passed} tint={color.pass} />
+            <StatTile label={t('round.shared.points')} value={score} tint={color.brand} />
           </PopIn>
 
           {twist ? (
             <Text variant="caption" tone="muted">
-              {twist.emoji} {twist.title}
-              {twist.effect === 'double' ? ': every card counted twice.' : '.'}
+              {t(twist.effect === 'double' ? 'round.recap.twistDouble' : 'round.recap.twistPlain', {
+                emoji: twist.emoji,
+                title: twistTitle(twist.id),
+              })}
             </Text>
           ) : null}
 
           {cleared ? (
             <Text variant="caption" tone="muted">
-              🎩 That cleared the hat{openRound?.phase === 3 ? '. Game over!' : ' for this phase.'}
+              {openRound?.phase === 3 ? t('round.recap.clearedGameOver') : t('round.recap.clearedPhase')}
             </Text>
           ) : null}
 
           {reshuffled ? (
             <Text variant="caption" tone="muted">
-              The decks ran out and got reshuffled.
+              {t('round.shared.reshuffled')}
             </Text>
           ) : null}
 
@@ -131,7 +135,7 @@ export default function RoundRecapScreen() {
 
         <View style={[styles.listPane, upright && styles.listPaneUpright]}>
           <Text variant="overline" tone="faint" style={styles.listLabel}>
-            {results.length > 0 ? 'TAP ONE TO FIX A MIS-TAP' : 'THIS ROUND'}
+            {results.length > 0 ? t('round.recap.listLabelFix') : t('round.recap.listLabelEmpty')}
           </Text>
           <FlatList
             data={results}
@@ -140,10 +144,10 @@ export default function RoundRecapScreen() {
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Text variant="heading" align="center">
-                  Nothing this round
+                  {t('round.recap.emptyTitle')}
                 </Text>
                 <Text variant="caption" tone="muted" align="center">
-                  The timer beat everyone to it. Next time.
+                  {t('round.recap.emptyBody')}
                 </Text>
               </View>
             }
@@ -152,23 +156,28 @@ export default function RoundRecapScreen() {
               const got = item.outcome === 'correct';
               const next: Outcome = got ? 'pass' : 'correct';
               const tint = got ? color.correct : item.busted ? color.danger : color.pass;
+              const cardText = card?.text ?? t('round.recap.cardFallback');
 
               return (
                 <Tap
                   onPress={() => overrideResult(item.cardId, next)}
                   squish={0.98}
-                  accessibilityLabel={`${card?.text ?? 'Card'}, ${got ? 'got it' : item.busted ? `busted on ${item.busted}` : 'passed'}. Tap to change to ${
-                    next === 'correct' ? 'got it' : 'passed'
-                  }.`}
+                  accessibilityLabel={
+                    got
+                      ? t('round.recap.rowA11yGot', { card: cardText })
+                      : item.busted
+                        ? t('round.recap.rowA11yBusted', { card: cardText, word: item.busted })
+                        : t('round.recap.rowA11yPassed', { card: cardText })
+                  }
                   contentStyle={styles.row}
                 >
                   <View style={[styles.receipt, got ? { backgroundColor: tint } : { borderColor: tint, borderWidth: 2.5 }]} />
                   <View style={styles.rowBody}>
                     <Text variant="heading" numberOfLines={1}>
-                      {card?.text ?? 'Card'}
+                      {cardText}
                     </Text>
                     <Text style={[styles.status, { color: tint }]}>
-                      {got ? 'Got it' : item.busted ? `Busted: “${item.busted}”` : 'Passed'}
+                      {got ? t('round.recap.statusGot') : item.busted ? t('round.recap.statusBusted', { word: item.busted }) : t('round.recap.statusPassed')}
                       <Text style={styles.time}> · {clock(item.atMs)}</Text>
                       {/* The clue-giver hint. Shown here, never on the card. */}
                       {card?.note ? <Text style={styles.time}> · {card.note}</Text> : null}
@@ -194,11 +203,11 @@ function clock(ms: number): string {
 }
 
 function verdict(correct: number): { headline: string; mood: MascotMood } {
-  if (correct >= 8) return { headline: 'Unreal 🔥', mood: 'excited' };
-  if (correct >= 5) return { headline: 'Great round', mood: 'excited' };
-  if (correct >= 2) return { headline: 'Nice one', mood: 'happy' };
-  if (correct === 1) return { headline: 'On the board', mood: 'wink' };
-  return { headline: 'Rough one', mood: 'sad' };
+  if (correct >= 8) return { headline: t('round.recap.verdict.unreal'), mood: 'excited' };
+  if (correct >= 5) return { headline: t('round.recap.verdict.great'), mood: 'excited' };
+  if (correct >= 2) return { headline: t('round.recap.verdict.nice'), mood: 'happy' };
+  if (correct === 1) return { headline: t('round.recap.verdict.onTheBoard'), mood: 'wink' };
+  return { headline: t('round.recap.verdict.rough'), mood: 'sad' };
 }
 
 const styles = StyleSheet.create({

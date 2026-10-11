@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_DECK_EMOJI, MIN_PLAYABLE_CARDS } from '@/decks/types';
 import type { GameMode } from '@/game/types';
+import { t, type MessageKey } from '@/i18n';
 import { CircleButton } from '@/ui/CircleButton';
 import { cardTextOn } from '@/ui/contrast';
 import { EmojiSticker } from '@/ui/EmojiSticker';
@@ -72,11 +73,14 @@ export type PlayPageProps = {
   onRoundSeconds: () => void;
 };
 
-/** The modes, in the order a camera app lists its modes: left to right. */
-export const MODES: readonly { mode: GameMode; label: string; hint: string }[] = [
-  { mode: 'classic', label: 'Classic', hint: 'Tap to play' },
-  { mode: 'taboo', label: 'Banned', hint: 'Tap to play · some words are off limits' },
-  { mode: 'threeRounds', label: '3 Rounds', hint: 'Tap to play · same cards, three ways' },
+/**
+ * The modes, in the order a camera app lists its modes: left to right.
+ * Labels and hints are message keys, translated on render.
+ */
+export const MODES: readonly { mode: GameMode; label: MessageKey; hint: MessageKey }[] = [
+  { mode: 'classic', label: 'home.play.modes.classic', hint: 'home.play.hints.classic' },
+  { mode: 'taboo', label: 'home.play.modes.taboo', hint: 'home.play.hints.taboo' },
+  { mode: 'threeRounds', label: 'home.play.modes.threeRounds', hint: 'home.play.hints.threeRounds' },
 ];
 
 const LENS = 62;
@@ -208,24 +212,28 @@ export function PlayPage({
         {title.lines.join('\n')}
       </RNText>
       <Text style={[styles.meta, { color: ink }]}>
-        {mix ? `${lens.deckIds.length} decks · ` : ''}
-        {lens.cardCount} cards
+        {mix
+          ? t('home.play.mixMeta', {
+              decks: t('home.play.deckCount', { count: lens.deckIds.length }),
+              cards: t('home.play.cardCount', { count: lens.cardCount }),
+            })
+          : t('home.play.cardCount', { count: lens.cardCount })}
       </Text>
 
       {/* Things to do with this deck, without leaving Play. */}
       <View style={styles.actions}>
-        <Pill icon="eye" label="Peek" onPress={() => onPreview(lens)} />
+        <Pill icon="eye" label={t('home.play.peek')} onPress={() => onPreview(lens)} />
         {mix ? (
-          <Pill icon="decks" label="Pick decks" onPress={() => onSetup(lens)} />
+          <Pill icon="decks" label={t('home.play.pickDecks')} onPress={() => onSetup(lens)} />
         ) : (
           <>
             <Pill
               icon={lens.favorite ? 'heartFilled' : 'heart'}
-              label={lens.favorite ? 'Faved' : 'Fave'}
+              label={lens.favorite ? t('home.play.faved') : t('home.play.fave')}
               onPress={() => onFavorite(lens)}
               tint={lens.favorite ? palette.red : undefined}
             />
-            <Pill icon="edit" label="Edit" onPress={() => onEdit(lens)} />
+            <Pill icon="edit" label={t('common.edit')} onPress={() => onEdit(lens)} />
           </>
         )}
       </View>
@@ -245,11 +253,11 @@ export function PlayPage({
                 squish={0.92}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
-                accessibilityLabel={`${item.label} mode`}
+                accessibilityLabel={t('home.play.modeLabel', { mode: t(item.label) })}
                 contentStyle={[styles.mode, active && styles.modeActive]}
               >
                 <RNText style={[styles.modeText, active && styles.modeTextActive]} allowFontScaling={false}>
-                  {item.label}
+                  {t(item.label)}
                 </RNText>
               </Tap>
             );
@@ -259,22 +267,22 @@ export function PlayPage({
         <Tap
           onPress={onRoundSeconds}
           squish={0.92}
-          accessibilityLabel={`Round length ${roundSeconds} seconds. Tap to change.`}
+          accessibilityLabel={t('home.play.roundLengthLabel', { seconds: roundSeconds })}
           contentStyle={styles.timer}
         >
           <Icon name="timer" size={15} color={color.bone} weight={3} />
           <RNText style={styles.timerText} allowFontScaling={false}>
-            {roundSeconds}s
+            {t('home.play.roundLengthShort', { seconds: roundSeconds })}
           </RNText>
         </Tap>
       </View>
 
       <Text style={[styles.hint, { color: ink }]} numberOfLines={1} adjustsFontSizeToFit>
         {starting
-          ? 'Starting…'
+          ? t('home.play.starting')
           : playable
-            ? (MODES.find((m) => m.mode === mode)?.hint ?? 'Tap to play')
-            : `Needs ${MIN_PLAYABLE_CARDS} cards · tap to open`}
+            ? t(MODES.find((m) => m.mode === mode)?.hint ?? 'home.play.hints.classic')
+            : t('home.play.needsCards', { count: MIN_PLAYABLE_CARDS })}
       </Text>
 
       <View style={styles.carouselWrap} onLayout={(event) => setRail(event.nativeEvent.layout.width)}>
@@ -297,7 +305,7 @@ export function PlayPage({
               key={item.key}
               onPress={() => pressLens(index)}
               squish={0.9}
-              accessibilityLabel={index === selected ? `Play ${item.name}` : item.name}
+              accessibilityLabel={index === selected ? t('home.play.playDeck', { name: item.name }) : item.name}
               accessibilityState={{ selected: index === selected }}
               contentStyle={[styles.lens, { backgroundColor: item.accent }]}
             >
@@ -330,12 +338,12 @@ export function PlayPage({
             },
           ]}
         >
-          <Tap onPress={onMe} accessibilityLabel="Your stats" contentStyle={styles.avatar}>
+          <Tap onPress={onMe} accessibilityLabel={t('home.play.yourStats')} contentStyle={styles.avatar}>
             <Mascot size={40} animated={false} />
           </Tap>
 
           {streak > 0 ? (
-            <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
+            <View style={styles.streak} accessible accessibilityLabel={t('home.play.streakLabel', { count: streak })}>
               <RNText style={styles.streakText}>
                 🔥 {streak}
                 {playedToday ? '' : ' ⏳'}
@@ -346,13 +354,13 @@ export function PlayPage({
           )}
 
           <View style={styles.topRight}>
-            <Tap onPress={onSort} accessibilityLabel={`Sort decks. Now: ${sortLabel}`} contentStyle={styles.sort}>
+            <Tap onPress={onSort} accessibilityLabel={t('home.play.sortLabel', { sort: sortLabel })} contentStyle={styles.sort}>
               <Icon name="sort" size={16} color={color.bone} weight={3} />
               <RNText style={styles.sortText} allowFontScaling={false}>
                 {sortLabel}
               </RNText>
             </Tap>
-            <CircleButton icon="settings" label="Teams and rules" tone="scrim" onPress={() => onSetup(lens)} />
+            <CircleButton icon="settings" label={t('home.play.teamsAndRules')} tone="scrim" onPress={() => onSetup(lens)} />
           </View>
         </View>
 
@@ -504,7 +512,7 @@ export function mixLens(decks: { id: string; cardCount: number; emoji: string | 
   const playable = decks.filter((d) => d.cardCount >= MIN_PLAYABLE_CARDS);
   return {
     key: 'mix',
-    name: 'Mix it up',
+    name: t('home.play.mixName'),
     accent: palette.yellow,
     deckIds: playable.map((d) => d.id),
     cardCount: playable.reduce((sum, d) => sum + d.cardCount, 0),

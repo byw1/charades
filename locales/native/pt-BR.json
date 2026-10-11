@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "O Charades usa a câmera para ler códigos de baralhos e tirar fotos para as suas próprias cartas. Nada sai do seu celular, a menos que você compartilhe.",
+    "NSMotionUsageDescription": "O Charades usa o movimento para o controle por inclinação: incline o celular para baixo quando acertar e para cima para passar. Nada é gravado.",
+    "NSPhotoLibraryUsageDescription": "O Charades permite escolher fotos para as suas próprias cartas. Elas ficam no seu celular, dentro dos seus baralhos."
+  }
+}

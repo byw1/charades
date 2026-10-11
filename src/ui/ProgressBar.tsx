@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { color, radius } from './tokens';
+import { t } from '@/i18n';
 
 export type ProgressBarProps = {
   /** 0 to 1. */
@@ -66,7 +67,7 @@ export function StoryBar({ count, index, progress = 1, tone = 'canvas' }: StoryB
   const segment = [styles.segment, tone === 'canvas' && styles.segmentCanvas];
   const filled = [styles.segmentFill, tone === 'canvas' && styles.segmentFillCanvas];
   return (
-    <View style={styles.story} accessibilityLabel={`Step ${index + 1} of ${count}`} accessible>
+    <View style={styles.story} accessibilityLabel={t('ui.storyBar.step', { step: index + 1, count })} accessible>
       {Array.from({ length: count }, (_, i) => (
         <View key={i} style={segment}>
           {i < index ? <View style={[filled, { width: '100%' }]} /> : null}

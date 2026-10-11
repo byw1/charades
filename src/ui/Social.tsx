@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { cardTextOn } from './contrast';
 import { Text } from './Text';
 import { color, font, palette, radius, space } from './tokens';
+import { t } from '@/i18n';
 
 /**
  * The messaging-app vocabulary: a chat line with a coloured sender label, a
@@ -19,7 +20,7 @@ export type ChatLineProps = {
 };
 
 /** A message: sender in caps and colour, a bar of the same colour down the left. */
-export function ChatLine({ from = 'DEX', tint = palette.purple, children, style }: ChatLineProps) {
+export function ChatLine({ from = t('ui.mascot.name'), tint = palette.purple, children, style }: ChatLineProps) {
   return (
     <View style={[styles.chat, style]}>
       <Text variant="overline" style={{ color: tint }}>

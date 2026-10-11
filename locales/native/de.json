@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charades nutzt die Kamera, um Deck-Codes zu scannen und Fotos für deine eigenen Karten aufzunehmen. Nichts verlässt dein Handy, außer du teilst es.",
+    "NSMotionUsageDescription": "Charades nutzt Bewegungsdaten für die Kippsteuerung: Handy nach unten kippen bei „Erraten“, nach oben zum Überspringen. Es wird nichts aufgezeichnet.",
+    "NSPhotoLibraryUsageDescription": "Mit Charades kannst du Fotos für deine eigenen Karten auswählen. Sie bleiben auf deinem Handy, in deinen Decks."
+  }
+}

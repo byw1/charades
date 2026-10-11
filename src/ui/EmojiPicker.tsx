@@ -9,6 +9,7 @@ import { SearchField } from './SearchField';
 import { Text } from './Text';
 import { TopBar } from './TopBar';
 import { color, font, gutter, radius, scheme, space } from './tokens';
+import { t, tDynamic } from '@/i18n';
 
 export type EmojiPickerProps = {
   visible: boolean;
@@ -51,7 +52,7 @@ export function EmojiPicker({ visible, value, tint, onPick, onClose }: EmojiPick
           key={emoji}
           onPress={() => pick(emoji)}
           accessibilityRole="button"
-          accessibilityLabel={`Use ${emoji}`}
+          accessibilityLabel={t('ui.emojiPicker.use', { emoji })}
           style={({ pressed }) => [styles.cell, cell, pressed && styles.cellPressed]}
         >
           <View style={[styles.cellInner, emoji === value && { borderColor: tint, backgroundColor: color.surfaceRaised }]}>
@@ -68,7 +69,7 @@ export function EmojiPicker({ visible, value, tint, onPick, onClose }: EmojiPick
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
       <SafeAreaView style={styles.sheet} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.column}>
-          <TopBar leading="close" onLeading={onClose} leadingLabel="Close" title="Cover emoji" />
+          <TopBar leading="close" onLeading={onClose} leadingLabel={t('common.close')} title={t('ui.emojiPicker.title')} />
 
           <View style={styles.typeRow}>
             <EmojiSticker emoji={value ?? DEFAULT_DECK_EMOJI} size={64} tilt={-6} />
@@ -80,20 +81,20 @@ export function EmojiPicker({ visible, value, tint, onPick, onClose }: EmojiPick
                   const emoji = lastEmoji(text);
                   if (emoji) pick(emoji);
                 }}
-                placeholder="Type any emoji"
+                placeholder={t('ui.emojiPicker.typePlaceholder')}
                 placeholderTextColor={color.textFaint}
                 keyboardAppearance={scheme}
-                accessibilityLabel="Type any emoji from your keyboard"
+                accessibilityLabel={t('ui.emojiPicker.typeA11y')}
                 autoCorrect={false}
                 style={styles.typeInput}
               />
               <Text variant="caption" tone="muted">
-                Tap here, then 😀 on your keyboard for every emoji there is.
+                {t('ui.emojiPicker.typeHint')}
               </Text>
             </View>
           </View>
 
-          <SearchField value={query} onChangeText={setQuery} placeholder="Search: pizza, party, dog…" />
+          <SearchField value={query} onChangeText={setQuery} placeholder={t('ui.emojiPicker.searchPlaceholder')} />
 
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
             {results ? (
@@ -101,14 +102,14 @@ export function EmojiPicker({ visible, value, tint, onPick, onClose }: EmojiPick
                 grid(results)
               ) : (
                 <Text variant="body" tone="muted" align="center" style={styles.empty}>
-                  Nothing for “{query.trim()}”. Try another word, or type it from your keyboard above.
+                  {t('ui.emojiPicker.noResults', { query: query.trim() })}
                 </Text>
               )
             ) : (
               EMOJI_GROUPS.map((group) => (
-                <View key={group.name} style={styles.group}>
+                <View key={group.id} style={styles.group}>
                   <Text variant="overline" tone="faint" style={styles.groupName}>
-                    {group.name.toUpperCase()}
+                    {tDynamic(`ui.emojiPicker.groups.${group.id}`).toLocaleUpperCase()}
                   </Text>
                   {grid(group.emoji.map(([emoji]) => emoji))}
                 </View>
@@ -118,7 +119,7 @@ export function EmojiPicker({ visible, value, tint, onPick, onClose }: EmojiPick
             {value ? (
               <Pressable onPress={() => pick(null)} accessibilityRole="button" style={styles.reset}>
                 <Text variant="label" tone="muted" align="center">
-                  Use the plain {DEFAULT_DECK_EMOJI} instead
+                  {t('ui.emojiPicker.useDefault', { emoji: DEFAULT_DECK_EMOJI })}
                 </Text>
               </Pressable>
             ) : null}

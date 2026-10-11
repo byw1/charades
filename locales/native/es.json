@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charades usa la cámara para escanear códigos de mazos y hacer fotos para tus propias cartas. Nada sale de tu teléfono a menos que lo compartas.",
+    "NSMotionUsageDescription": "Charades usa el movimiento para el control por inclinación: inclina el teléfono hacia abajo si aciertas y hacia arriba para pasar. No se graba nada.",
+    "NSPhotoLibraryUsageDescription": "Charades te permite elegir fotos para tus propias cartas. Se quedan en tu teléfono, dentro de tus mazos."
+  }
+}

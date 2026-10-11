@@ -4,11 +4,12 @@
  * typed straight from the keyboard.
  */
 
-export type EmojiGroup = { name: string; emoji: readonly (readonly [string, string])[] };
+/** `id` picks the heading from the catalog: ui.emojiPicker.groups.<id>. */
+export type EmojiGroup = { id: string; emoji: readonly (readonly [string, string])[] };
 
 export const EMOJI_GROUPS: readonly EmojiGroup[] = [
   {
-    name: 'Faces',
+    id: 'faces',
     emoji: [
       ['😂', 'laugh crying lol funny tears joy'],
       ['🤣', 'rofl rolling laugh funny'],
@@ -43,7 +44,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Party',
+    id: 'party',
     emoji: [
       ['🎉', 'party popper celebrate confetti'],
       ['🎊', 'confetti ball celebrate'],
@@ -78,7 +79,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Food',
+    id: 'food',
     emoji: [
       ['🍕', 'pizza food italian slice'],
       ['🍔', 'burger hamburger food fast'],
@@ -118,7 +119,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Animals',
+    id: 'animals',
     emoji: [
       ['🐶', 'dog puppy pet'],
       ['🐱', 'cat kitty pet'],
@@ -153,7 +154,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Sports',
+    id: 'sports',
     emoji: [
       ['🏀', 'basketball sport nba hoops'],
       ['⚽', 'football soccer sport'],
@@ -178,7 +179,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Places & travel',
+    id: 'places',
     emoji: [
       ['🏠', 'house home'],
       ['🏫', 'school'],
@@ -208,7 +209,7 @@ export const EMOJI_GROUPS: readonly EmojiGroup[] = [
     ],
   },
   {
-    name: 'Things',
+    id: 'things',
     emoji: [
       ['📱', 'phone mobile social'],
       ['💻', 'laptop computer'],

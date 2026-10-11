@@ -48,5 +48,10 @@ export const FORFEITS: readonly string[] = [
  * the loser cannot reroll by backing out.
  */
 export function forfeitFor(sessionId: string): string {
-  return FORFEITS[seedFromString(sessionId) % FORFEITS.length]!;
+  return FORFEITS[forfeitIndexFor(sessionId)]!;
+}
+
+/** Index into FORFEITS of a game's forfeit, so the UI can show it translated. */
+export function forfeitIndexFor(sessionId: string): number {
+  return seedFromString(sessionId) % FORFEITS.length;
 }

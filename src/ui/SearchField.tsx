@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { Icon } from './Icon';
 import { color, gutter, radius, scheme, space, type as typeScale } from './tokens';
+import { t } from '@/i18n';
 
 export type SearchFieldProps = {
   value: string;
@@ -9,7 +10,8 @@ export type SearchFieldProps = {
   placeholder?: string;
 };
 
-export function SearchField({ value, onChangeText, placeholder = 'Search decks and cards' }: SearchFieldProps) {
+export function SearchField({ value, onChangeText, placeholder: placeholderProp }: SearchFieldProps) {
+  const placeholder = placeholderProp ?? t('ui.searchField.placeholder');
   const [focused, setFocused] = useState(false);
 
   return (

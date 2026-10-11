@@ -5,6 +5,7 @@ import { makeCardId } from '@/decks/ids';
 import { DEFAULT_DECK_EMOJI, type Card, type StoredDeck } from '@/decks/types';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useHaptics } from '@/hooks/useHaptics';
+import { t } from '@/i18n';
 import { saveDeckChanges } from '@/storage/deckRepo';
 import { Button } from '@/ui/Button';
 import { cardTextOn } from '@/ui/contrast';
@@ -93,17 +94,17 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
 
   const leave = () => {
     if (!dirty) return router.back();
-    Alert.alert('Leave without saving?', 'Your changes to this deck will be lost.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
+    Alert.alert(t('editor.leave.title'), t('editor.leave.body'), [
+      { text: t('editor.leave.keepEditing'), style: 'cancel' },
+      { text: t('editor.leave.discard'), style: 'destructive', onPress: () => router.back() },
     ]);
   };
 
   const resetAll = () =>
-    Alert.alert('Back to the original?', 'Every hidden card comes back and the cards you added are removed.', [
-      { text: 'Keep mine', style: 'cancel' },
+    Alert.alert(t('editor.free.reset.title'), t('editor.free.reset.body'), [
+      { text: t('editor.free.reset.keepMine'), style: 'cancel' },
       {
-        text: 'Reset',
+        text: t('editor.free.reset.confirm'),
         style: 'destructive',
         onPress: () => {
           setHidden(new Set());
@@ -121,7 +122,7 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
 
   return (
     <Screen>
-      <TopBar leading="close" onLeading={leave} leadingLabel="Close" title="Make it yours" />
+      <TopBar leading="close" onLeading={leave} leadingLabel={t('common.close')} title={t('editor.free.title')} />
 
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FlatList
@@ -139,25 +140,25 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
                     {deck.name}
                   </Text>
                   <Text variant="caption" style={{ color: onAccent, opacity: 0.9 }}>
-                    {showing} cards in play · {mine.length} yours · {hidden.size} hidden
+                    {t('editor.free.counts', { showing, mine: mine.length, hidden: hidden.size })}
                   </Text>
                 </View>
               </View>
 
               <Text variant="caption" tone="muted">
-                Hide cards you don’t want, add your own. Your changes stay when the app updates this deck.
+                {t('editor.free.intro')}
               </Text>
 
               <Text variant="overline" tone="faint">
-                ADD YOUR OWN
+                {t('editor.free.addYourOwn')}
               </Text>
               <View style={styles.addRow}>
                 <Field
                   value={newCard}
                   onChangeText={setNewCard}
                   onSubmitEditing={add}
-                  placeholder="Type a card and hit return"
-                  accessibilityLabel="New card"
+                  placeholder={t('editor.newCardPlaceholder')}
+                  accessibilityLabel={t('editor.free.newCardLabel')}
                   returnKeyType="done"
                   submitBehavior="submit"
                   style={styles.grow}
@@ -165,7 +166,7 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
                 <Tap
                   onPress={add}
                   disabled={!newCard.trim()}
-                  accessibilityLabel="Add card"
+                  accessibilityLabel={t('editor.addCard')}
                   contentStyle={[styles.addButton, { backgroundColor: newCard.trim() ? color.brand : color.surface }]}
                 >
                   <Icon name="plus" size={24} color={newCard.trim() ? color.ink : color.textFaint} weight={3.5} />
@@ -173,10 +174,10 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
               </View>
 
               <Text variant="overline" tone="faint">
-                CARDS · TAP THE EYE TO HIDE ONE
+                {t('editor.free.cardsHeader')}
               </Text>
               <View style={styles.search}>
-                <SearchField value={query} onChangeText={setQuery} placeholder={`Search ${own.length} cards`} />
+                <SearchField value={query} onChangeText={setQuery} placeholder={t('editor.free.search', { count: own.length })} />
               </View>
             </View>
           }
@@ -184,15 +185,15 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
             item.kind === 'mine' ? (
               <View style={styles.row}>
                 <View style={styles.yours}>
-                  <Text style={styles.yoursText}>YOURS</Text>
+                  <Text style={styles.yoursText}>{t('editor.free.yoursBadge')}</Text>
                 </View>
                 <Field
                   value={item.card.text}
                   onChangeText={(text) => editMine(item.card.id, text)}
-                  accessibilityLabel="Your card"
+                  accessibilityLabel={t('editor.free.yourCardLabel')}
                   style={styles.grow}
                 />
-                <Pressable onPress={() => removeMine(item.card.id)} accessibilityRole="button" accessibilityLabel={`Delete ${item.card.text}`} hitSlop={8}>
+                <Pressable onPress={() => removeMine(item.card.id)} accessibilityRole="button" accessibilityLabel={t('editor.free.deleteCardLabel', { text: item.card.text })} hitSlop={8}>
                   <Icon name="trash" size={20} color={color.danger} />
                 </Pressable>
               </View>
@@ -201,7 +202,11 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
                 onPress={() => toggle(item.card.id)}
                 accessibilityRole="switch"
                 accessibilityState={{ checked: !hidden.has(item.card.id) }}
-                accessibilityLabel={`${item.card.text}, ${hidden.has(item.card.id) ? 'hidden' : 'in play'}`}
+                accessibilityLabel={
+                  hidden.has(item.card.id)
+                    ? t('editor.free.cardHiddenLabel', { text: item.card.text })
+                    : t('editor.free.cardInPlayLabel', { text: item.card.text })
+                }
                 style={styles.row}
               >
                 <Text
@@ -223,7 +228,7 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
             hidden.size > 0 || mine.length > 0 ? (
               <Pressable onPress={resetAll} accessibilityRole="button" style={styles.reset}>
                 <Text variant="label" tone="muted" align="center">
-                  Reset to the original deck
+                  {t('editor.free.resetLink')}
                 </Text>
               </Pressable>
             ) : null
@@ -232,7 +237,7 @@ export function FreeDeckEditor({ deck }: { deck: StoredDeck }) {
 
         <Footer>
           <Button
-            label={saving ? 'Saving…' : 'Save changes'}
+            label={saving ? t('editor.saving') : t('editor.free.saveChanges')}
             variant="primary"
             size="lg"
             icon="check"

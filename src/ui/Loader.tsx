@@ -4,12 +4,18 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Mascot } from './Mascot';
 import { Text } from './Text';
 import { color, space } from './tokens';
+import { t, type MessageKey } from '@/i18n';
 
 /** What the card on Dex's forehead flips through, one per hop. */
 export const LOADER_GLYPHS = ['?', '🍕', '🎤', '⭐', '🏀', '🍿', '🎮', '🦁'] as const;
 
-/** Said while waiting, one after another. Short enough to read mid-hop. */
-export const LOADER_LINES = ['Shuffling the decks', 'Waking Dex up', 'Finding the good cards', 'Stretching first'] as const;
+/** Said while waiting, one after another. Short enough to read mid-hop. Catalog keys, translated when shown. */
+export const LOADER_LINES = [
+  'ui.loader.lines.shuffling',
+  'ui.loader.lines.wakingDex',
+  'ui.loader.lines.findingCards',
+  'ui.loader.lines.stretching',
+] as const satisfies readonly MessageKey[];
 
 const HOP_MS = 520;
 const LINE_MS = 1800;
@@ -69,7 +75,7 @@ export function Loader({ label, size = 96, style }: LoaderProps) {
   const rise = size * 0.28;
 
   return (
-    <View style={[styles.wrap, style]} accessible accessibilityRole="progressbar" accessibilityLabel={label ?? 'Loading'}>
+    <View style={[styles.wrap, style]} accessible accessibilityRole="progressbar" accessibilityLabel={label ?? t('ui.loader.loading')}>
       <View style={{ height: size + rise, justifyContent: 'flex-end', alignItems: 'center' }}>
         <Animated.View
           style={[
@@ -119,7 +125,7 @@ export function Loader({ label, size = 96, style }: LoaderProps) {
       </View>
 
       <Text variant="label" tone="muted" align="center">
-        {label ?? LOADER_LINES[line]}
+        {label ?? t(LOADER_LINES[line] ?? LOADER_LINES[0])}
       </Text>
     </View>
   );

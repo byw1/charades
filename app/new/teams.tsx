@@ -5,6 +5,7 @@ import { recentPlayers } from '@/game/friends';
 import { areTeamsReady, MAX_TEAMS, MIN_TEAMS } from '@/game/teams';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useNewGameStore } from '@/hooks/useNewGameStore';
+import { t } from '@/i18n';
 import { listSessions } from '@/storage/sessionRepo';
 import { Button } from '@/ui/Button';
 import { Chip } from '@/ui/Chip';
@@ -62,8 +63,8 @@ export default function NewGameTeamsScreen() {
       <StepHeader
         step={2}
         of={3}
-        title="Who’s playing?"
-        subtitle="Teams are optional. Names help me pass the phone round."
+        title={t('newGame.teams.title')}
+        subtitle={t('newGame.teams.subtitle')}
         onClose={() => router.dismissAll()}
         mood="wink"
       />
@@ -74,17 +75,17 @@ export default function NewGameTeamsScreen() {
             <Chip
               grow
               emoji="🎉"
-              label="Just play"
-              detail="Everyone together"
+              label={t('newGame.teams.justPlay.label')}
+              detail={t('newGame.teams.justPlay.detail')}
               selected={mode === 'justPlay'}
               onPress={() => setMode('justPlay')}
-              accessibilityLabel="Just play, no teams"
+              accessibilityLabel={t('newGame.teams.justPlay.a11y')}
             />
             <Chip
               grow
               emoji="🏆"
-              label="Teams"
-              detail="Split up and compete"
+              label={t('newGame.teams.teamsMode.label')}
+              detail={t('newGame.teams.teamsMode.detail')}
               selected={mode === 'teams'}
               onPress={() => setMode('teams')}
             />
@@ -92,17 +93,17 @@ export default function NewGameTeamsScreen() {
 
           {mode === 'justPlay' ? (
             <View style={styles.section}>
-              <SectionLabel>Who’s here (optional)</SectionLabel>
+              <SectionLabel>{t('newGame.teams.whosHere')}</SectionLabel>
               <View style={styles.pad}>
                 <PlayerList names={soloPlayers} onChange={setSoloPlayers} suggestions={suggestions} />
                 <Text variant="caption" tone="muted">
-                  One name per line. I’ll rotate who holds the phone and keep everyone’s score.
+                  {t('newGame.teams.soloHint')}
                 </Text>
               </View>
             </View>
           ) : (
             <View style={styles.section}>
-              <SectionLabel>How many teams</SectionLabel>
+              <SectionLabel>{t('newGame.teams.howMany')}</SectionLabel>
               <View style={styles.row}>
                 {Array.from({ length: MAX_TEAMS - MIN_TEAMS + 1 }, (_, i) => i + MIN_TEAMS)
                   .filter((count) => count >= 2)
@@ -113,7 +114,7 @@ export default function NewGameTeamsScreen() {
                       label={String(count)}
                       selected={teams.length === count}
                       onPress={() => setTeamCount(count)}
-                      accessibilityLabel={`${count} teams`}
+                      accessibilityLabel={t('newGame.teams.countA11y', { count })}
                     />
                   ))}
               </View>
@@ -124,8 +125,8 @@ export default function NewGameTeamsScreen() {
                     <Field
                       value={team.name}
                       onChangeText={(name) => renameTeam(team.id, name)}
-                      placeholder="Team name"
-                      accessibilityLabel="Team name"
+                      placeholder={t('newGame.teams.teamName')}
+                      accessibilityLabel={t('newGame.teams.teamName')}
                       maxLength={24}
                       size="heading"
                       style={[styles.teamName, { color: cardTextOn(team.color) }]}
@@ -144,7 +145,7 @@ export default function NewGameTeamsScreen() {
 
               {!ready ? (
                 <Text variant="caption" tone="pass" style={styles.pad}>
-                  Every team needs a name, and no two the same.
+                  {t('newGame.teams.notReady')}
                 </Text>
               ) : null}
             </View>
@@ -154,7 +155,7 @@ export default function NewGameTeamsScreen() {
 
       <Footer>
         <Button
-          label="Next"
+          label={t('common.next')}
           variant="blue"
           size="lg"
           icon={ready ? 'forward' : undefined}
@@ -198,8 +199,8 @@ function PlayerList({
       <Field
         value={draft}
         onChangeText={update}
-        placeholder={'Sam\nAlex\nJo'}
-        accessibilityLabel="Player names, one per line"
+        placeholder={t('newGame.teams.playersPlaceholder')}
+        accessibilityLabel={t('newGame.teams.playersA11y')}
         multiline
         autoCapitalize="words"
         autoCorrect={false}
@@ -208,7 +209,7 @@ function PlayerList({
       {suggestions.length > 0 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestions} keyboardShouldPersistTaps="handled">
           {suggestions.map((name) => (
-            <Chip key={name} label={`+ ${name}`} selected={false} onPress={() => add(name)} accessibilityLabel={`Add ${name}`} />
+            <Chip key={name} label={t('newGame.teams.addSuggestion', { name })} selected={false} onPress={() => add(name)} accessibilityLabel={t('newGame.teams.addSuggestionA11y', { name })} />
           ))}
         </ScrollView>
       ) : null}

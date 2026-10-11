@@ -1,0 +1,7 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Charadesはデッキコードの読み取りと、自作カード用の写真撮影にカメラを使用します。共有しない限り、データがスマートフォンの外に出ることはありません。",
+    "NSMotionUsageDescription": "Charadesは傾き操作にモーションセンサーを使用します。正解なら下に、パスなら上に傾けてください。記録は一切されません。",
+    "NSPhotoLibraryUsageDescription": "Charadesでは自作カード用の写真を選べます。写真はスマートフォン内のデッキにのみ保存されます。"
+  }
+}

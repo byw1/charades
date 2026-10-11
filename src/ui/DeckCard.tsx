@@ -5,6 +5,7 @@ import { EmojiSticker } from './EmojiSticker';
 import { Tap } from './Tap';
 import { Text } from './Text';
 import { color, font, radius, space } from './tokens';
+import { t } from '@/i18n';
 
 export type DeckCardProps = {
   deck: DeckSummary;
@@ -23,14 +24,14 @@ export function DeckCard({ deck, onPress, style }: DeckCardProps) {
   const playable = summaryIsPlayable(deck);
   const ink = cardTextOn(deck.accentColor);
   const emoji = deck.emoji ?? DEFAULT_DECK_EMOJI;
-  const count = `${deck.cardCount} ${deck.cardCount === 1 ? 'card' : 'cards'}`;
+  const count = t('ui.deckCard.cards', { count: deck.cardCount });
 
   return (
     <Tap
       onPress={onPress}
       squish={0.96}
-      accessibilityLabel={`${deck.name}, ${count}${deck.favorite ? ', favourite' : ''}`}
-      accessibilityHint={playable ? undefined : 'Not enough cards to start a round'}
+      accessibilityLabel={t(deck.favorite ? 'ui.deckCard.a11yLabelFavourite' : 'ui.deckCard.a11yLabel', { name: deck.name, cards: count })}
+      accessibilityHint={playable ? undefined : t('ui.deckCard.notPlayableHint')}
       style={style}
       contentStyle={[styles.tile, { backgroundColor: deck.accentColor }]}
     >
@@ -48,7 +49,7 @@ export function DeckCard({ deck, onPress, style }: DeckCardProps) {
           </View>
           {deck.mineCount > 0 || deck.hiddenCount > 0 ? (
             <View style={[styles.pill, { backgroundColor: color.bone }]}>
-              <Text style={[styles.pillText, { color: color.ink }]}>✏️ yours</Text>
+              <Text style={[styles.pillText, { color: color.ink }]}>{t('ui.deckCard.yours')}</Text>
             </View>
           ) : null}
         </View>
@@ -70,7 +71,7 @@ export function DeckCard({ deck, onPress, style }: DeckCardProps) {
       <View style={styles.bottom}>
         {playable ? null : (
           <View style={[styles.pill, styles.warn]}>
-            <Text style={[styles.pillText, { color: color.ink }]}>too few to play</Text>
+            <Text style={[styles.pillText, { color: color.ink }]}>{t('ui.deckCard.tooFew')}</Text>
           </View>
         )}
         <Text style={[styles.name, { color: ink }]} numberOfLines={2}>
